@@ -1,0 +1,19 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"title": "nf_starr_seq",
+	"description": "A nextflow pipeline of STARR-Seq data analysis",
+	"type": "object",
+	"properties": {
+		"sample_sheet": {
+			"type": "string",
+			"format": "file-path",
+			"description": "A sample sheet specifying sample meta information (csv or tsv)"
+		},
+		"outdir": {
+			"type": "string",
+			"description": "Output directory",
+			"default": "current working directory"
+		}
+	},
+	"required": ["sample_sheet", "outdir"]
+}
