@@ -1,10 +1,10 @@
 /* ---- splicing analysis pipeline ---- */
 
 /* -- load modules -- */
-
+include { NOTE_CMD }                  from "$projectDir/modules/local/init_workflow/main"
 
 /* -- load subworkflows -- */
-
+include { check_input_files }         from "$projectDir/subworkflows/check_input_files.nf"
 
 /* -- define functions -- */
 def helpMessage() {
@@ -15,6 +15,22 @@ Usage:
     Mandatory arguments:
         --sample_sheet                path of the sample sheet
         --outdir                      the directory path of output results, default: the current directory
+    
+    Optional arguments:
+    Cutadapt:
+        --ct_a                        Sequence of an adapter ligated to the 3' end (paired data: of the first read)
+        --ct_g                        Sequence of an adapter ligated to the 5' end (paired data: of the first read)
+        --ct_A                        Sequence of an adapter ligated to the 3' end (paired data: of the second read)
+        --ct_G                        Sequence of an adapter ligated to the 5' end (paired data: of the second read)
+        --ct_O                        Require MINLENGTH overlap between read and adapter for an adapter to be found, default: 3
+        --ct_e                        Maximum allowed error rate, default: 0.1 (10%)
+        --ct_m                        Discard reads shorter than LEN, default: 0
+        --ct_action                   What to do if a match was found, default: "trim" {trim, retain, mask, lowercase, none}
+        
+
+
+    
+
     """
 }
 
@@ -50,13 +66,22 @@ def check_required(required_tools) {
 }
 
 /* -- initialising parameters -- */
-params.help                        = false
-params.version                     = false
-params.pipeline_name               = workflow.manifest.name
-params.pipeline_version            = workflow.manifest.version
+params.help             = false
+params.version          = false
+params.pipeline_name    = workflow.manifest.name
+params.pipeline_version = workflow.manifest.version
 
-params.sample_sheet                = null
-params.outdir                      = params.outdir                      ?: "$PWD"
+params.sample_sheet     = null
+params.outdir           = params.outdir               ?: "$PWD"
+
+params.ct_a             = params.ct_a                 ?: null
+params.ct_g             = params.ct_g                 ?: null
+params.ct_A             = params.ct_A                 ?: null
+params.ct_G             = params.ct_G                 ?: null
+params.ct_O             = params.ct_O                 ?: 3
+params.ct_e             = params.ct_e                 ?: 0.1
+params.ct_m             = params.ct_m                 ?: 0
+params.ct_action        = params.ct_action            ?: "trim"
 
 /* -- pipeline info -- */
 log.info """
@@ -118,14 +143,23 @@ if (!file(params.outdir).isDirectory()) {
     error("Invalid output directory: ${params.outdir}. Please specify a valid directory.")
 }
 
-
-
 /* -- check software exist -- */
 def required_tools = ['fastqc', 'cutadapt', 'bowtie2', 'samtools']
 check_required(required_tools)
 
-
 /* -- workflow -- */
 workflow starr_seq {
+    /* -- note down the command line -- */
+    NOTE_CMD(workflow.commandLine)
+
+    /* -- check input files exist -- */
+    check_input_files(ch_input)
+    ch_fastq  = check_input_files.out.ch_fastq
+
+    /* -- preprocess -- */
+    preprocess(ch_fastq)
+    ch_preprocessed_fastq = preprocess.out.ch_preprocessed_fastq
+
+    /* -- deduplication -- */
     
 }
