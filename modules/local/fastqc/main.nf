@@ -3,7 +3,7 @@ process FASTQC {
 
     publishDir "${params.outdir}/res_fastqc", mode: 'copy'
 
-    tag "${sample}_${replicate}"
+    tag "${library}_${sample}_${replicate}"
 
     input:
     tuple val(library), val(sample), val(replicate), path(read1), path(read2)
