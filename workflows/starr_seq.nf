@@ -26,9 +26,29 @@ Usage:
         --ct_e                        Maximum allowed error rate, default: 0.1 (10%)
         --ct_m                        Discard reads shorter than LEN, default: 0
         --ct_action                   What to do if a match was found, default: "trim" {trim, retain, mask, lowercase, none}
-        
+
+    Flash2:
+        --f2_min_overlap              min overlap for flash2, default: 10
+        --f2_max_overlap              max overlap for flash2, default: 250
+        --f2_min_overlap_outie        min overlap outie for flash2, default: 20
+        --f2_max_mismatch_density     max mismatch density for flash2, default: 0.25
+
+    Deduplication:
+        --skip_dedup                  whether to skip deduplication, default: false
+        --has_umi                     whether the reads contain UMIs, default: false
+    
+    Fastp (only for deduplication):
+        --fp_thread                   the number of threads to use, default: 12
+        --fp_dup_calc_accuracy        the accuracy level for duplicate detection, default: 6
+        --fp_umi_loc                  the location of UMI ["index1", "index2", "read1", "read2", "per_index", "per_read"], default: none
+        --fp_umi_len                  the length of UMI when --fp_umi_loc in ["read1", "read2", "per_read"], default: 10
+        --fp_umi_prefix               if specified, an underline will be used to connect prefix and UMI (i.e. prefix=UMI, UMI=AATTCG, final=UMI_AATTCG), default: none
+        --fp_umi_skip                 if the UMI is in read1/read2, fastp can skip several bases following UMI, default: 0
+        --fp_umi_delim                delimiter to use between the read name and the UMI, default: ":"
 
 
+
+    
     
 
     """
@@ -154,7 +174,8 @@ workflow starr_seq {
 
     /* -- check input files exist -- */
     check_input_files(ch_input)
-    ch_fastq  = check_input_files.out.ch_fastq
+    ch_fastq = check_input_files.out.ch_fastq
+    ch_ref   = check_input_files.out.ch_ref
 
     /* -- preprocess -- */
     preprocess(ch_fastq)
