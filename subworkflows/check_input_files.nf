@@ -17,13 +17,14 @@ workflow check_input_files {
 process CHECK_FILES {
     label 'process_single'
 
-    tag "${sample}_${replicate}"
+    tag "${library}_${sample}_${replicate}"
 
     input:
-    tuple val(libary), val(sample), val(replicate), val(directory), val(read1), val(read2), val(reference)
+    tuple val(library), val(sample), val(replicate), val(directory), val(read1), val(read2), val(reference)
 
     output:
-    tuple val(libary), val(sample), val(replicate), path("${sample}.read_1.fastq.gz"), path("${sample}.read_2.fastq.gz"), emit: ch_fastq
+    tuple val(library), val(sample), val(replicate), path("${library}_${sample}_${replicate}.r1.fastq.gz"), path("${library}_${sample}_${replicate}.r2.fastq.gz"), emit: ch_fastq
+    tuple val(library), val(sample), val(replicate), path("${library}.ref.fasta"), emit: ch_ref
 
     script:
     def file_read1 = file("${directory}/${read1}")
@@ -58,25 +59,25 @@ process CHECK_FILES {
     }
 
     def valid_libraries = ["enhance", "promoter", "random", "ts_promoter", "ts_random"]
-    if (!valid_libraries.contains(libary)) {
-        error("Error: library '${libary}' is invalid. Expected one of: ${valid_libraries.join(', ')}")
+    if (!valid_libraries.contains(library)) {
+        error("Error: library '${library}' is invalid. Expected one of: ${valid_libraries.join(', ')}")
     }
 
     """
     echo "Checking: ${sample}"
 
     if [[ "${file_read1}" == *.fq || "${file_read1}" == *.fastq ]]; then
-        gzip -c ${file_read1} > ${sample}.read_1.fastq.gz
+        gzip -c ${file_read1} > ${library}_${sample}_${replicate}.r1.fastq.gz
     else
-        ln -s ${file_read1} ${sample}.read_1.fastq.gz
+        ln -s ${file_read1} ${library}_${sample}_${replicate}.r1.fastq.gz
     fi
 
     if [[ "${file_read2}" == *.fq || "${file_read2}" == *.fastq ]]; then
-        gzip -c ${file_read2} > ${sample}.read_2.fastq.gz
+        gzip -c ${file_read2} > ${library}_${sample}_${replicate}.r2.fastq.gz
     else
-        ln -s ${file_read2} ${sample}.read_2.fastq.gz
+        ln -s ${file_read2} ${library}_${sample}_${replicate}.r2.fastq.gz
     fi
 
-    ln -s ${file_reference} ${sample}.ref.fasta
+    ln -s ${file_reference} ${library}.ref.fasta
     """
 }
