@@ -9,10 +9,17 @@ process FASTQC {
     tuple val(library), val(sample), val(replicate), path(read1), path(read2)
 
     output:
-    tuple val(library), val(sample), val(replicate), path("${library}_${sample}_${replicate}"), emit: ch_fastqc_html
+    tuple val(library), val(sample), val(replicate), path("${prefix}"), emit: ch_fastqc_html
 
     script:
+    def prefix = "${library}_${sample}_${replicate}"
+
     """
-    fastqc --threads ${task.cpus} --outdir ${library}_${sample}_${replicate} ${read1} ${read2}
+    fastqc --threads ${task.cpus} --outdir ${prefix} ${read1} ${read2}
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        fastqc: \$( fastqc --version | awk '{print \$2}')
+    END_VERSIONS  
     """
 }

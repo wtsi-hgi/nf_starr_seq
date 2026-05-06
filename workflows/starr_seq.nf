@@ -38,7 +38,6 @@ Usage:
         --has_umi                     whether the reads contain UMIs, default: false
     
     Fastp (only for deduplication):
-        --fp_thread                   the number of threads to use, default: 12
         --fp_dup_calc_accuracy        the accuracy level for duplicate detection, default: 6
         --fp_umi_loc                  the location of UMI ["index1", "index2", "read1", "read2", "per_index", "per_read"], default: none
         --fp_umi_len                  the length of UMI when --fp_umi_loc in ["read1", "read2", "per_read"], default: 10
@@ -86,22 +85,32 @@ def check_required(required_tools) {
 }
 
 /* -- initialising parameters -- */
-params.help             = false
-params.version          = false
-params.pipeline_name    = workflow.manifest.name
-params.pipeline_version = workflow.manifest.version
+params.help                 = false
+params.version              = false
+params.pipeline_name        = workflow.manifest.name
+params.pipeline_version     = workflow.manifest.version
 
-params.sample_sheet     = null
-params.outdir           = params.outdir               ?: "$PWD"
+params.sample_sheet         = null
+params.outdir               = params.outdir               ?: "$PWD"
 
-params.ct_a             = params.ct_a                 ?: null
-params.ct_g             = params.ct_g                 ?: null
-params.ct_A             = params.ct_A                 ?: null
-params.ct_G             = params.ct_G                 ?: null
-params.ct_O             = params.ct_O                 ?: 3
-params.ct_e             = params.ct_e                 ?: 0.1
-params.ct_m             = params.ct_m                 ?: 0
-params.ct_action        = params.ct_action            ?: "trim"
+params.ct_a                 = params.ct_a                 ?: null
+params.ct_g                 = params.ct_g                 ?: null
+params.ct_A                 = params.ct_A                 ?: null
+params.ct_G                 = params.ct_G                 ?: null
+params.ct_O                 = params.ct_O                 ?: 3
+params.ct_e                 = params.ct_e                 ?: 0.1
+params.ct_m                 = params.ct_m                 ?: 0
+params.ct_action            = params.ct_action            ?: "trim"
+
+params.skip_dedup           = false
+params.has_umi              = false
+
+params.fp_dup_calc_accuracy = params.fp_dup_calc_accuracy ?: 6
+params.fp_umi_loc           = params.fp_umi_loc           ?: null
+params.fp_umi_len           = params.fp_umi_len           ?: 10
+params.fp_umi_prefix        = params.fp_umi_prefix        ?: null
+params.fp_umi_skip          = params.fp_umi_skip          ?: 0
+params.fp_umi_delim         = params.fp_umi_delim         ?: ":"
 
 /* -- pipeline info -- */
 log.info """
