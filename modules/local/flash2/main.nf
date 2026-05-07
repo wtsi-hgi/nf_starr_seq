@@ -12,6 +12,8 @@ process FLASH2 {
         "${mem * task.attempt} GB"
     }
 
+    publishDir "${params.outdir}/res_flash2", mode: 'copy'
+
     tag "${library}_${sample}_${replicate}"
 
     input:

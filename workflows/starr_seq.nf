@@ -2,9 +2,12 @@
 
 /* -- load modules -- */
 include { NOTE_CMD }                  from "$projectDir/modules/local/init_workflow/main"
+include { FASTP }                     from "$projectDir/modules/local/fastp/main"
+include { FLASH2 }                    from "$projectDir/modules/local/flash2/main"
 
 /* -- load subworkflows -- */
 include { check_input_files }         from "$projectDir/subworkflows/check_input_files.nf"
+include { preprocess }                from "$projectDir/subworkflows/preprocess.nf"
 
 /* -- define functions -- */
 def helpMessage() {
@@ -237,5 +240,5 @@ workflow starr_seq {
     ch_not_combined = FLASH2.out.ch_not_combined
     ch_merge_stats = FLASH2.out.ch_merge_stats
 
-    
+
 }
