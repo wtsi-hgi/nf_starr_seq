@@ -172,6 +172,32 @@ if (!file(params.outdir).isDirectory()) {
     error("Invalid output directory: ${params.outdir}. Please specify a valid directory.")
 }
 
+if (params.has_umi) {
+    log.info "UMI information is provided. Deduplication will consider UMIs."
+    
+    if (params.fp_umi_loc == null) {
+        error("Error: --fp_umi_loc must be specified when --has_umi is true.")
+    } else if (params.fp_umi_loc in ["index1", "index2", "read1", "read2", "per_index", "per_read"]) {
+        log.info "UMI location is set to '${params.fp_umi_loc}'."
+    } else {
+        error("Error: Invalid value for --fp_umi_loc: ${params.fp_umi_loc}. Expected one of: index1, index2, read1, read2, per_index, per_read.")
+    }
+
+    if (params.fp_umi_loc in ["read1", "read2", "per_read"] && (!params.fp_umi_len || params.fp_umi_len <= 0)) {
+        error("Error: --fp_umi_len must be a positive integer when --fp_umi_loc is set to 'read1', 'read2', or 'per_read'.")
+    }
+
+    if (params.fp_umi_prefix) {
+        log.info "UMI prefix is set to '${params.fp_umi_prefix}'. UMIs will be prefixed accordingly in the output."
+    }
+
+    if (params.fp_umi_skip && params.fp_umi_skip > 0) {
+        log.info "UMI skip is set to ${params.fp_umi_skip}. Fastp will skip ${params.fp_umi_skip} bases following the UMI in the read."
+    }
+} else {
+    log.info "No UMI information provided. Deduplication will be based on sequence alone."
+}
+
 /* -- check software exist -- */
 def required_tools = ['fastqc', 'cutadapt', 'bowtie2', 'samtools']
 check_required(required_tools)
@@ -191,5 +217,15 @@ workflow starr_seq {
     ch_preprocessed_fastq = preprocess.out.ch_preprocessed_fastq
 
     /* -- deduplication -- */
+    if (params.skip_dedup) {
+        ch_dedup_fastq = ch_preprocessed_fastq
+        ch_dedup_stat = Channel.empty()
+    } else {
+        FASTP(ch_preprocessed_fastq)
+        ch_dedup_fastq = FASTP.out.ch_dedup_fastq
+        ch_dedup_stat = FASTP.out.ch_dedup_stat
+    }
+
+    /* -- merging reads -- */
     
 }
