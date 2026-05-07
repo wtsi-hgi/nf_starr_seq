@@ -27,12 +27,6 @@ Usage:
         --ct_m                        Discard reads shorter than LEN, default: 0
         --ct_action                   What to do if a match was found, default: "trim" {trim, retain, mask, lowercase, none}
 
-    Flash2:
-        --f2_min_overlap              min overlap for flash2, default: 10
-        --f2_max_overlap              max overlap for flash2, default: 250
-        --f2_min_overlap_outie        min overlap outie for flash2, default: 20
-        --f2_max_mismatch_density     max mismatch density for flash2, default: 0.25
-
     Deduplication:
         --skip_dedup                  whether to skip deduplication, default: false
         --has_umi                     whether the reads contain UMIs, default: false
@@ -46,6 +40,12 @@ Usage:
         --fp_umi_delim                delimiter to use between the read name and the UMI, default: ":"
 
 
+
+    Flash2:
+        --f2_min_overlap              min overlap for flash2, default: 10
+        --f2_max_overlap              max overlap for flash2, default: 250
+        --f2_min_overlap_outie        min overlap outie for flash2, default: 20
+        --f2_max_mismatch_density     max mismatch density for flash2, default: 0.25
 
     
     
@@ -111,6 +111,11 @@ params.fp_umi_len           = params.fp_umi_len           ?: 10
 params.fp_umi_prefix        = params.fp_umi_prefix        ?: null
 params.fp_umi_skip          = params.fp_umi_skip          ?: 0
 params.fp_umi_delim         = params.fp_umi_delim         ?: ":"
+
+params.f2_min_overlap       = params.f2_min_overlap       ?: 10
+params.f2_max_overlap       = params.f2_max_overlap       ?: 250
+params.f2_min_overlap_outie = params.f2_min_overlap_outie ?: 20
+params.f2_max_mismatch_density = params.f2_max_mismatch_density ?: 0.25
 
 /* -- pipeline info -- */
 log.info """
@@ -227,5 +232,10 @@ workflow starr_seq {
     }
 
     /* -- merging reads -- */
+    FLASH2(ch_dedup_fastq)
+    ch_extended_frags = FLASH2.out.ch_extended_frags
+    ch_not_combined = FLASH2.out.ch_not_combined
+    ch_merge_stats = FLASH2.out.ch_merge_stats
+
     
 }
