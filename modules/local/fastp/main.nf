@@ -8,7 +8,7 @@ process FASTP {
 
     output:
     tuple val(library), val(sample), val(replicate), path("${prefix}.dedup.r1.fastq.gz"), path("${prefix}.dedup.r2.fastq.gz"), emit: ch_dedup_fastq
-    tuple val(library), val(sample), val(replicate), path("${prefix}.dedup_stat.tsv"), emit: ch_dedup_stat
+    tuple val(library), val(sample), val(replicate), path("${prefix}.dedup_stats.tsv"), emit: ch_dedup_stats
 
     script:
     def prefix = "${library}_${sample}_${replicate}"
@@ -49,7 +49,7 @@ process FASTP {
           --dup_calc_accuracy ${params.fp_dup_calc_accuracy} \
           ${fastp_umi_args} \
           --thread ${task.cpus} \
-          --html ${prefix}.dedup_stat.html 2>&1 | tee ${prefix}.dedup_stat.tsv
+          --html ${prefix}.dedup_stats.html 2>&1 | tee ${prefix}.dedup_stats.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
