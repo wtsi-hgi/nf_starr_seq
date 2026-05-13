@@ -207,7 +207,7 @@ if (params.has_umi) {
 }
 
 /* -- check software exist -- */
-def required_tools = ['fastqc', 'cutadapt', 'bowtie2', 'samtools']
+def required_tools = ['fastqc', 'cutadapt', 'fastp', 'flash2', 'bwa', 'samtools']
 check_required(required_tools)
 
 /* -- workflow -- */
