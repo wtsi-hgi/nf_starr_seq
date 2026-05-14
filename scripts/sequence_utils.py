@@ -179,45 +179,16 @@ def extract_sequence(seq: str, up_seq: str, down_seq: str, max_mismatches: int) 
 
     return seq[start_idx:end_idx]
 
-def check_barcode(barcode_seq: str, barcode_temp: str, max_mismatches: int):
+def check_barcode(barcode_seq: str, restrict_site: str, max_mismatches: int):
     """
-    Check if barcode_seq matches the barcode_temp allowing max_mismatches
+    Check if barcode_seq has the restrict_site allowing max_mismatches
     Parameters:
         -- barcode_seq: the sequence to check
-        -- barcode_temp: the template sequence to match against
+        -- restrict_site: the restriction site sequence to match against
         -- max_mismatches: maximum number of mismatches allowed
     Returns:
-        -- str or None: corrected barcode sequence if matches, else None
+        -- bool: False if barcode_seq matches restrict_site within max_mismatches, else True
     """
-    if len(barcode_seq) != len(barcode_temp):
-        return None
-
-    mismatch_count = 0
-    barcode_corrected = []
-
-    for s_char, p_char in zip(barcode_seq, barcode_temp):
-        if p_char == 'N':
-            barcode_corrected.append(s_char)
-        elif s_char != p_char:
-            mismatch_count += 1
-            barcode_corrected.append(p_char)
-            if mismatch_count > max_mismatches:
-                return None
-        else:
-            barcode_corrected.append(s_char)
-
-    return "".join(barcode_corrected)
-
-def calc_softclip_lens(cigar: str) -> tuple[int, int]:
-    first_softclip = 0
-    last_softclip = 0
-
-    match_start = re.match(r'^(\d+)S', cigar)
-    if match_start:
-        first_softclip = int(match_start.group(1))
-
-    match_end = re.search(r'(\d+)S$', cigar)
-    if match_end:
-        last_softclip = int(match_end.group(1))
-
-    return first_softclip, last_softclip
+    start_idx = match_approximate(barcode_seq, restrict_site, max_mismatches, "hamming")
+    
+    return start_idx != 0
