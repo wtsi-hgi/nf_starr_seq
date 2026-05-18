@@ -120,10 +120,11 @@ if __name__ == "__main__":
     parser.add_argument("--barcode_up",        type = str, default = None,        help = "Upstream flank sequence of barcode in read2")
     parser.add_argument("--barcode_down",      type = str, default = None,        help = "Downstream flank sequence of barcode in read2")
     parser.add_argument("--max_mismatches",    type = int, default = 2,           help = "Max mismatches allowed in up/down matches")
-    parser.add_argument("--barcode_len",       type = int, default = None,        help = "Length of the barcode sequence")
+    parser.add_argument("--barcode_len",       type = str, default = None,        help = "Length of the barcode sequence")
     parser.add_argument("--restrict_site",     type = str, default = None,        help = "Sequence of restriction enzyme cutting site in the vector")
     parser.add_argument("--restrict_mismatch", type = int, default = 1,           help = "Number of mismatches allowed in restriction site checking")
     parser.add_argument("--min_barcov",        type = int, default = 2,           help = "Minimum coverage for barcode-variant association")
+    parser.add_argument("--keep_tmp",          action = "store_true",             help = "Whether to keep temporary files")
     parser.add_argument("--output_dir",        type = str, default = os.getcwd(), help = "output directory")
     parser.add_argument("--output_prefix",     type = str, required = True,       help = "output prefix")
     parser.add_argument("--chunk_size",        type = int, default = 100000,      help = "Chunk size for processing reads")
@@ -147,26 +148,45 @@ if __name__ == "__main__":
 
     #-- processing --#
     print(f"Detecting variant and barcode associations, please wait...", flush=True)
-    list_results = []
+
+    tmp_dir = os.path.join(args.output_dir, args.output_prefix + "_tmp")
+    if os.path.exists(tmp_dir):
+        print(f"Warning: Temporary directory {tmp_dir} already exists, it will be removed and recreated.", flush=True)
+        for f in os.listdir(tmp_dir):
+            os.remove(os.path.join(tmp_dir, f))
+    else:
+        os.makedirs(tmp_dir, exist_ok = True)
+    chunk_files = []
+
     for i, chunk_result in enumerate(process_pe_pairs_in_chunk(args.read1, args.read2)):
         print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} --> Processed chunk {i+1} with {args.chunk_size} read pairs", flush=True)
         if not chunk_result.is_empty():
-            list_results.append(chunk_result)
-    print(f"Finished processing all the reads.", flush=True)
-
-    # -- clean and format the extracted barcodes from reads -- #
-    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Generating barcode results, please wait ...", flush = True)
-    list_results_filtered = [df for df in list_results if df.height > 0]
-    if list_results_filtered:
-        df_barcode = pl.concat(list_results_filtered, how = "vertical")
-        df_barcode_counts = ( df_barcode.group_by(["variant_seq", "barcode_seq"])
-                                        .agg(pl.sum("count").alias("count")) )
-    else:
+            tmp_path = os.path.join(tmp_dir, f"tmp_chunk_{i}.parquet")
+            chunk_result.write_parquet(tmp_path)
+            chunk_files.append(tmp_path)
+        del chunk_result
+        gc.collect()
+    
+    if not chunk_files:
         with open(barcode_out, "w") as f:
             f.write("no barcode found in the reads, please check your barcode marker or template!\n")
         exit(0)
 
+    print(f"Generating barcode results, please wait...", flush=True)
+    df_barcode_counts = (
+        pl.scan_parquet(chunk_files)
+          .group_by(["variant_seq", "barcode_seq"])
+          .agg(pl.sum("count").alias("count"))
+          .collect()
+    )
+
+    if not args.keep_tmp:
+        for f in chunk_files:
+            os.remove(f)
+        os.rmdir(tmp_dir)
+
     count_processed_reads = df_barcode_counts["count"].sum()
+
     print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Filtering barcode results, please wait ...", flush = True)
 
     # -- barcode upstream not found -- #
@@ -184,7 +204,8 @@ if __name__ == "__main__":
     # -- barcode length check -- #
     if args.barcode_len is not None:
         print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} --> Filtering against barcode length, please wait ...", flush=True)
-        mask = df_barcode_counts["barcode_seq"].str.len_chars() != args.barcode_len
+        valid_lengths = set(int(x.strip()) for x in str(args.barcode_len).split(","))
+        mask = ~df_barcode_counts["barcode_seq"].str.len_chars().is_in(valid_lengths)
         count_barcode_length = df_barcode_counts.filter(mask)["count"].sum()
         df_barcode_counts = df_barcode_counts.filter(~mask)
 
