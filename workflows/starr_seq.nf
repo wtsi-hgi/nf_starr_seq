@@ -35,14 +35,14 @@ Usage:
         --has_umi                     whether the reads contain UMIs, default: false
     
     Fastp (only for deduplication):
+        --fp_q                        the quality value that a base is qualified, default: 20
+        --fp_u                        how much percentage of bases are allowed to be unqualified (0~100), default: 30
         --fp_dup_calc_accuracy        the accuracy level for duplicate detection, default: 6
         --fp_umi_loc                  the location of UMI ["index1", "index2", "read1", "read2", "per_index", "per_read"], default: none
         --fp_umi_len                  the length of UMI when --fp_umi_loc in ["read1", "read2", "per_read"], default: 10
         --fp_umi_prefix               if specified, an underline will be used to connect prefix and UMI (i.e. prefix=UMI, UMI=AATTCG, final=UMI_AATTCG), default: none
         --fp_umi_skip                 if the UMI is in read1/read2, fastp can skip several bases following UMI, default: 0
         --fp_umi_delim                delimiter to use between the read name and the UMI, default: ":"
-
-
 
     Flash2:
         --f2_min_overlap              min overlap for flash2, default: 10
@@ -108,6 +108,8 @@ params.ct_action            = params.ct_action            ?: "trim"
 params.skip_dedup           = false
 params.has_umi              = false
 
+params.fp_q                 = params.fp_q                 ?: 20
+params.fp_u                 = params.fp_u                 ?: 30
 params.fp_dup_calc_accuracy = params.fp_dup_calc_accuracy ?: 6
 params.fp_umi_loc           = params.fp_umi_loc           ?: null
 params.fp_umi_len           = params.fp_umi_len           ?: 10

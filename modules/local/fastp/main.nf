@@ -47,6 +47,8 @@ process FASTP {
           --out2 ${prefix}.dedup.r2.fastq.gz \
           --compression 9 \
           --disable_adapter_trimming \
+          --qualified_quality_phred ${params.fp_q} \
+          --unqualified_percent_limit ${params.fp_u} \
           --dedup \
           --dup_calc_accuracy ${params.fp_dup_calc_accuracy} \
           ${fastp_umi_args} \
