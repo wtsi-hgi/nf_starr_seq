@@ -6,11 +6,13 @@ import argparse
 import re
 import gc
 import subprocess
+import duckdb
 import polars as pl
+import numpy as np
+import matplotlib.pyplot as plt
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from itertools import islice
-from collections import Counter
 
 from sequence_utils import (
     pigz_open,
@@ -20,7 +22,9 @@ from sequence_utils import (
     check_barcode
 )
 
-#-- functions --#
+#-------------------------------------------------------
+# parallel processing functions for paired-end reads
+#-------------------------------------------------------
 def process_pe_pair(read_pair: tuple) -> list:
     """
     Detect canonical splicing event in a pair of reads
@@ -34,17 +38,17 @@ def process_pe_pair(read_pair: tuple) -> list:
     read1_seq = read1[1]
     read2_seq = read2[1]
 
-    variant_seq = read1_seq
+    target_seq = read1_seq
     if args.barcode_up is None and args.barcode_down is None:
         barcode_seq = read2_seq
     else:
         barcode_seq = extract_sequence(read2_seq, args.barcode_up, args.barcode_down, args.max_mismatches)
     
-    return (variant_seq, barcode_seq)
+    return (target_seq, barcode_seq)
 
 def batch_process_pe_pairs(batch_reads: list) -> list:
     """
-    Process a batch of read pairs to extract variants and barcodes.
+    Process a batch of read pairs to extract targets and barcodes.
     Parameters:
         -- batch_reads
     Returns:
@@ -94,14 +98,14 @@ def process_pe_pairs_in_chunk(path_read1, path_read2):
             futures = [ executor.submit(function_processpool_pe, batch) for batch in read_batches ]
             for future in as_completed(futures):
                 batch_result = future.result()
-                list_barcodes.append(pl.DataFrame(batch_result, schema = ["variant_seq", "barcode_seq"], orient = "row"))
+                list_barcodes.append(pl.DataFrame(batch_result, schema = ["target_seq", "barcode_seq"], orient = "row"))
 
                 # -- free memory -- #
                 del batch_result
                 gc.collect()
 
             df_yield = ( pl.concat(list_barcodes, how = "vertical")
-                           .group_by(["variant_seq", "barcode_seq"])
+                           .group_by(["target_seq", "barcode_seq"])
                            .agg(pl.len().alias("count")) )
 
             # -- free memory -- #
@@ -112,9 +116,79 @@ def process_pe_pairs_in_chunk(path_read1, path_read2):
     fh_read1.close()
     fh_read2.close()
 
-#-- main execution --#
+#-------------------------------------------------------
+# memory-efficient data merge
+#-------------------------------------------------------
+def duckdb_merge(chunk_files: list, tmp_dir: str) -> pl.DataFrame:
+    """
+    Merge all chunk parquet files using DuckDB with automatic spill-to-disk.
+    Parameters:
+        -- chunk_files: list of parquet file paths to merge
+        -- tmp_dir:     directory to write the final merged parquet and spill files
+    Returns:
+        -- pl.DataFrame with columns ["target_seq", "barcode_seq", "count"]
+    """
+    con = duckdb.connect()
+    con.execute(f"SET temp_directory='{tmp_dir}'")
+    con.execute(f"SET memory_limit='{args.db_mem_limit}'")
+    con.execute(f"SET threads={args.threads}") 
+
+    file_list = ", ".join(f"'{f}'" for f in chunk_files)
+    final_path = os.path.join(tmp_dir, "final.parquet")
+
+    con.execute(f"""
+        COPY (
+            SELECT target_seq, barcode_seq, SUM(count) AS count
+            FROM read_parquet([{file_list}])
+            GROUP BY target_seq, barcode_seq
+            ORDER BY target_seq
+        )
+        TO '{final_path}' (FORMAT PARQUET)
+    """)
+    con.close()
+
+    return pl.read_parquet(final_path)
+
+#-------------------------------------------------------
+# create histogram of barcode counts
+#-------------------------------------------------------
+def create_barcode_count_histogram(df_barcode_counts: pl.DataFrame, output_path: str):
+    """
+    Create a histogram of barcode counts and save to file.
+    Parameters:
+        -- df_barcode_counts: DataFrame with columns ["target_seq", "barcode_seq", "count"]
+        -- output_path: path to save the histogram plot
+    """
+    counts = df_barcode_counts["count"].to_numpy()
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    ax.hist(counts, bins = 60, color = "royalblue", edgecolor = "white", linewidth = 0.4)
+    ax.set_title("Histogram of Barcode Counts", fontsize = 14)
+    ax.set_xlabel("Count", fontsize = 12)
+    ax.set_ylabel("Number of barcodes", fontsize = 12)
+
+    median_val = np.median(counts)
+    mean_val = np.mean(counts)
+    n_barcodes = len(counts)
+    ax.axvline(median_val, color = "red", linestyle = "--", linewidth = 1.2, label = f"Median = {median_val:.1f}")
+    ax.axvline(mean_val, color = "orange", linestyle = "--", linewidth = 1.2, label = f"Mean = {mean_val:.1f}")
+    ax.legend(fontsize = 10)
+
+    ax.text(0.98, 0.97, f"n barcodes = {n_barcodes:,}", transform = ax.transAxes, ha = "right", va = "top", fontsize = 8, color = "black")
+ 
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    plt.tight_layout()
+
+    fig.savefig(output_path, dpi = 150)
+    plt.close(fig)
+
+#-------------------------------------------------------
+# main execution
+#-------------------------------------------------------
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "Extract variant and barcode from paired-end FASTQ files.", allow_abbrev = False)
+    parser = argparse.ArgumentParser(description = "Extract target and barcode from paired-end FASTQ files.", allow_abbrev = False)
     parser.add_argument("--read1",             type = str, required = True,       help = "Read 1 FASTQ file")
     parser.add_argument("--read2",             type = str, required = True,       help = "Read 2 FASTQ file")
     parser.add_argument("--barcode_up",        type = str, default = None,        help = "Upstream flank sequence of barcode in read2")
@@ -123,12 +197,13 @@ if __name__ == "__main__":
     parser.add_argument("--barcode_len",       type = str, default = None,        help = "Length of the barcode sequence")
     parser.add_argument("--restrict_site",     type = str, default = None,        help = "Sequence of restriction enzyme cutting site in the vector")
     parser.add_argument("--restrict_mismatch", type = int, default = 1,           help = "Number of mismatches allowed in restriction site checking")
-    parser.add_argument("--min_barcov",        type = int, default = 2,           help = "Minimum coverage for barcode-variant association")
-    parser.add_argument("--keep_tmp",          action = "store_true",             help = "Whether to keep temporary files")
+    parser.add_argument("--min_barcov",        type = int, default = 2,           help = "Minimum coverage for barcode-target association")
+    parser.add_argument("--resume_tmp",        action = "store_true",             help = "Whether to resume the process and keep temporary files")
     parser.add_argument("--output_dir",        type = str, default = os.getcwd(), help = "output directory")
     parser.add_argument("--output_prefix",     type = str, required = True,       help = "output prefix")
     parser.add_argument("--chunk_size",        type = int, default = 100000,      help = "Chunk size for processing reads")
     parser.add_argument("--threads",           type = int, default = 40,          help = "Number of threads")
+    parser.add_argument("--db_mem_limit",      type = str, default = "60GB",      help = "Memory limit for DuckDB during merging")
 
     args, unknown = parser.parse_known_args()
 
@@ -147,40 +222,43 @@ if __name__ == "__main__":
         os.remove(stats_out)
 
     #-- processing --#
-    print(f"Detecting variant and barcode associations, please wait...", flush=True)
+    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Detecting target and barcode associations, please wait...", flush=True)
 
     tmp_dir = os.path.join(args.output_dir, args.output_prefix + "_tmp")
     if os.path.exists(tmp_dir):
-        print(f"Warning: Temporary directory {tmp_dir} already exists, it will be removed and recreated.", flush=True)
-        for f in os.listdir(tmp_dir):
-            os.remove(os.path.join(tmp_dir, f))
+        if not args.resume_tmp:
+            print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Warning: Temporary directory {tmp_dir} already exists, it will be removed and recreated.", flush=True)
+            for f in os.listdir(tmp_dir):
+                os.remove(os.path.join(tmp_dir, f))
+        else:
+            print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Resuming from existing temporary directory {tmp_dir}.", flush=True)
     else:
         os.makedirs(tmp_dir, exist_ok = True)
-    chunk_files = []
-
-    for i, chunk_result in enumerate(process_pe_pairs_in_chunk(args.read1, args.read2)):
-        print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} --> Processed chunk {i+1} with {args.chunk_size} read pairs", flush=True)
-        if not chunk_result.is_empty():
-            tmp_path = os.path.join(tmp_dir, f"tmp_chunk_{i}.parquet")
-            chunk_result.write_parquet(tmp_path)
-            chunk_files.append(tmp_path)
-        del chunk_result
-        gc.collect()
     
+    if args.resume_tmp and os.path.exists(tmp_dir):
+        existing = {f for f in os.listdir(tmp_dir) if f.startswith("tmp_chunk_") and f.endswith(".parquet")}
+        chunk_files = [os.path.join(tmp_dir, f) for f in sorted(existing)]
+        print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Found {len(chunk_files)} existing chunk files in {tmp_dir}, resuming from these files.", flush=True)
+    else:
+        chunk_files = []
+        for i, chunk_result in enumerate(process_pe_pairs_in_chunk(args.read1, args.read2)):
+            print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} --> Processed chunk {i+1} with {args.chunk_size} read pairs", flush=True)
+            if not chunk_result.is_empty():
+                tmp_path = os.path.join(tmp_dir, f"tmp_chunk_{i}.parquet")
+                chunk_result.write_parquet(tmp_path)
+                chunk_files.append(tmp_path)
+            del chunk_result
+            gc.collect()
+
     if not chunk_files:
         with open(barcode_out, "w") as f:
             f.write("no barcode found in the reads, please check your barcode marker or template!\n")
         exit(0)
 
-    print(f"Generating barcode results, please wait...", flush=True)
-    df_barcode_counts = (
-        pl.scan_parquet(chunk_files)
-          .group_by(["variant_seq", "barcode_seq"])
-          .agg(pl.sum("count").alias("count"))
-          .collect()
-    )
+    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Generating barcode results, please wait...", flush=True)
+    df_barcode_counts = duckdb_merge(chunk_files, tmp_dir).with_columns(pl.col("count").cast(pl.Int64))
 
-    if not args.keep_tmp:
+    if not args.resume_tmp:
         for f in chunk_files:
             os.remove(f)
         os.rmdir(tmp_dir)
@@ -225,20 +303,30 @@ if __name__ == "__main__":
     count_low_barcov = df_barcode_counts.filter(mask)["count"].sum()
     df_barcode_counts = df_barcode_counts.filter(~mask)
 
-    # -- some barcodes match multiple variants, only keep the one with the highest count -- #
-    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} --> Filtering against barcode multiple variant matches, please wait ...", flush=True)
+    # -- some barcodes match multiple targets, only keep the one with the highest count -- #
+    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} --> Filtering against barcode multiple target matches, please wait ...", flush=True)
     count_before_filter = df_barcode_counts["count"].sum()
     df_barcode_counts = ( df_barcode_counts.sort("count", descending = True)
                                            .group_by("barcode_seq")
-                                           .agg([pl.first("variant_seq").alias("variant_seq"), pl.first("count").alias("count")]) )
+                                           .agg([pl.first("target_seq").alias("target_seq"), pl.first("count").alias("count")]) )
 
     # -- remaining records -- #
-    df_barcode_counts = df_barcode_counts.sort("variant_seq")
+    df_barcode_counts = df_barcode_counts.sort("target_seq")
     count_effective_reads = df_barcode_counts["count"].sum()
 
-    print(f"Creating output files, please wait...", flush=True)
+    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Creating output files, please wait...", flush=True)
     df_barcode_counts.write_csv(barcode_out, separator = "\t")
 
+    # -- statistics -- #
+    n_effective_targets = df_barcode_counts["target_seq"].n_unique()
+    n_avg_barcode_per_target = ( 
+        df_barcode_counts.group_by("target_seq")
+                         .agg(pl.count("barcode_seq").alias("barcode_count"))
+                         .select(pl.col("barcode_count").mean())
+                         .item() 
+    )
+
+    # -- write statistics -- #
     with open(stats_out, "w") as f:
         f.write(f"Total reads processed: {count_processed_reads}\n")
         f.write(f"Total reads with barcode upstream not found: {count_barup_notfound}\n")
@@ -248,7 +336,11 @@ if __name__ == "__main__":
         if args.restrict_site is not None:
             f.write(f"Total reads with restriction site mismatch: {count_barcode_restrict}\n")
         f.write(f"Total reads with barcode coverage < {args.min_barcov}: {count_low_barcov}\n")
-        f.write(f"Total reads with barcodes matching multiple variants: {count_before_filter - count_effective_reads}\n")
+        f.write(f"Total reads with barcodes matching multiple targets: {count_before_filter - count_effective_reads}\n")
         f.write(f"Total effective reads: {count_effective_reads}\n")
-    
+        f.write(f"Total effective targets: {n_effective_targets}\n")
+        f.write(f"Average number of barcodes per target: {n_avg_barcode_per_target:.2f}\n")
 
+    # -- create histogram of barcode counts -- #
+    hist_out = f"{args.output_prefix}.barcode_count_histogram.png"
+    create_barcode_count_histogram(df_barcode_counts, hist_out)
