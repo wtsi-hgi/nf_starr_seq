@@ -46,7 +46,7 @@ Usage:
 
     Flash2:
         --f2_min_overlap              min overlap for flash2, default: 10
-        --f2_max_overlap              max overlap for flash2, default: 250
+        --f2_max_overlap              max overlap for flash2, default: 150
         --f2_min_overlap_outie        min overlap outie for flash2, default: 20
         --f2_max_mismatch_density     max mismatch density for flash2, default: 0.25
 
@@ -118,7 +118,7 @@ params.fp_umi_skip          = params.fp_umi_skip          ?: 0
 params.fp_umi_delim         = params.fp_umi_delim         ?: ":"
 
 params.f2_min_overlap       = params.f2_min_overlap       ?: 10
-params.f2_max_overlap       = params.f2_max_overlap       ?: 250
+params.f2_max_overlap       = params.f2_max_overlap       ?: 150
 params.f2_min_overlap_outie = params.f2_min_overlap_outie ?: 20
 params.f2_max_mismatch_density = params.f2_max_mismatch_density ?: 0.25
 
