@@ -235,12 +235,16 @@ if __name__ == "__main__":
     else:
         os.makedirs(tmp_dir, exist_ok = True)
     
-    if args.resume_tmp and os.path.exists(tmp_dir):
+    chunk_files = []
+    if args.resume_tmp:
         existing = {f for f in os.listdir(tmp_dir) if f.startswith("tmp_chunk_") and f.endswith(".parquet")}
         chunk_files = [os.path.join(tmp_dir, f) for f in sorted(existing)]
-        print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Found {len(chunk_files)} existing chunk files in {tmp_dir}, resuming from these files.", flush=True)
-    else:
-        chunk_files = []
+        if not chunk_files:
+            print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} No existing chunk files found in {tmp_dir}, starting fresh.", flush=True)
+        else:
+            print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Found {len(chunk_files)} existing chunk files in {tmp_dir}, resuming from these files.", flush=True)
+    
+    if not chunk_files:
         for i, chunk_result in enumerate(process_pe_pairs_in_chunk(args.read1, args.read2)):
             print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} --> Processed chunk {i+1} with {args.chunk_size} read pairs", flush=True)
             if not chunk_result.is_empty():
