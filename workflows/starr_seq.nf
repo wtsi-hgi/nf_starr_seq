@@ -221,6 +221,19 @@ workflow starr_seq {
     preprocess(ch_fastq)
     ch_preprocessed_fastq = preprocess.out.ch_preprocessed_fastq
 
+
+
+
+
+
+
+
+
+
+
+
+
+
     /* -- deduplication -- */
     if (params.skip_dedup) {
         ch_dedup_fastq = ch_preprocessed_fastq

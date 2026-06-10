@@ -22,16 +22,18 @@ process CHECK_FILES {
     tag "${library}_${type}_${sample}_${replicate}"
 
     input:
-    tuple val(library), val(type), val(sample), val(replicate), val(directory), val(read1), val(read2), val(reference)
+    tuple val(library), val(type), val(sample), val(replicate), val(directory), val(read1), val(read2), val(reference), val(barcode)
 
     output:
     tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.r1.fastq.gz"), path("${prefix}.r2.fastq.gz"), emit: ch_fastq
-    tuple val(library), val(type), val(sample), val(replicate), path("${library}.ref.fasta"), emit: ch_ref, optional: true
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.ref.fasta"), emit: ch_ref, optional: true
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.barcode.tsv"), emit: ch_barcode, optional: true
 
     script:
     def file_read1 = file("${directory}/${read1}")
     def file_read2 = file("${directory}/${read2}")
     def file_reference = file("${directory}/${reference}")
+    def file_barcode = file("${directory}/${barcode}")
     
     def valid_read_ext = [".fq", ".fastq", ".fq.gz", ".fastq.gz"]
     def valid_ref_ext = [".fa", ".fasta"]
