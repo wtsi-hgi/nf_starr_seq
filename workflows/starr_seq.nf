@@ -148,7 +148,7 @@ if (params.sample_sheet) {
                       .splitCsv(header: true, sep: sep)
     
     // check required columns
-    def required_cols = ['library', 'sample', 'replicate', 'directory', 'read1', 'read2', 'reference']
+    def required_cols = ['library', 'type', 'sample', 'replicate', 'directory', 'read1', 'read2', 'reference']
     def header_line = new File(params.sample_sheet).readLines().head()
     def header = header_line.split(sep)
     def missing = required_cols.findAll { !(it in header) }
@@ -162,11 +162,6 @@ if (params.sample_sheet) {
         log.info("-------------------------------------")
         log.info(sheet_file.text)
         log.info("=====================================")
-
-        // reformat channel
-        ch_input = ch_input.map { row -> 
-            def sample_id = "${row.sample}_${row.replicate}"
-            tuple(sample_id, row.sample, row.replicate, row.directory, row.read1, row.read2, row.reference) }
     }
 } else {
     error("Error: Please specify the full path of the sample sheet!\n")

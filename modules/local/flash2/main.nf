@@ -14,20 +14,20 @@ process FLASH2 {
 
     publishDir "${params.outdir}/res_flash2", mode: 'copy'
 
-    tag "${library}_${sample}_${replicate}"
+    tag "${library}_${type}_${sample}_${replicate}"
 
     input:
     tuple val(library), val(sample), val(replicate), path(read1), path(read2)
 
     output:
-    tuple val(library), val(sample), val(replicate), path("${prefix}.extendedFrags.fastq.gz"), emit: ch_extended_frags
-    tuple val(library), val(sample), val(replicate), path("${prefix}.notCombined_1.fastq.gz"), path("${prefix}.notCombined_2.fastq.gz"), emit: ch_not_combined
-    tuple val(library), val(sample), val(replicate), path("${prefix}.merge_stats.tsv"), emit: ch_merge_stats
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.extendedFrags.fastq.gz"), emit: ch_extended_frags
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.notCombined_1.fastq.gz"), path("${prefix}.notCombined_2.fastq.gz"), emit: ch_not_combined
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.merge_stats.tsv"), emit: ch_merge_stats
 
     script:
-    def prefix = "${library}_${sample}_${replicate}"
+    def prefix = "${library}_${type}_${sample}_${replicate}"
 
-    if (library in ["enhancer", "promoter", "random"])
+    if (type in ["input", "output"])
     {
         """
         flash2 --min-overlap          ${params.f2_min_overlap} \

@@ -3,16 +3,16 @@ process CUTADAPT {
 
     publishDir "${params.outdir}/res_cutadapt", mode: 'copy'
 
-    tag "${library}_${sample}_${replicate}"
+    tag "${library}_${type}_${sample}_${replicate}"
 
     input:
-    tuple val(library), val(sample), val(replicate), path(read1), path(read2)
+    tuple val(library), val(type), val(sample), val(replicate), path(read1), path(read2)
 
     output:
-    tuple val(library), val(sample), val(replicate), path("${prefix}.cutadapt.r1.fastq.gz"), path("${prefix}.cutadapt.r2.fastq.gz"), emit: ch_cutadapt_fastq
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.cutadapt.r1.fastq.gz"), path("${prefix}.cutadapt.r2.fastq.gz"), emit: ch_cutadapt_fastq
 
     script:
-    def prefix = "${library}_${sample}_${replicate}"
+    def prefix = "${library}_${type}_${sample}_${replicate}"
 
     """
     cutadapt -j ${task.cpus} \

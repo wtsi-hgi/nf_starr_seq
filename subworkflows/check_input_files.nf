@@ -4,10 +4,10 @@ import java.io.BufferedReader
 
 workflow check_input_files {
     take:
-    ch_sample
+    ch_input
 
     main:
-    CHECK_FILES(ch_sample)
+    CHECK_FILES(ch_input)
     ch_fastq = CHECK_FILES.out.ch_fastq
     ch_ref   = CHECK_FILES.out.ch_ref
 
@@ -19,14 +19,14 @@ workflow check_input_files {
 process CHECK_FILES {
     label 'process_single'
 
-    tag "${library}_${sample}_${replicate}"
+    tag "${library}_${type}_${sample}_${replicate}"
 
     input:
-    tuple val(library), val(sample), val(replicate), val(directory), val(read1), val(read2), val(reference)
+    tuple val(library), val(type), val(sample), val(replicate), val(directory), val(read1), val(read2), val(reference)
 
     output:
-    tuple val(library), val(sample), val(replicate), path("${prefix}.r1.fastq.gz"), path("${prefix}.r2.fastq.gz"), emit: ch_fastq
-    tuple val(library), val(sample), val(replicate), path("${library}.ref.fasta"), emit: ch_ref, optional: true
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.r1.fastq.gz"), path("${prefix}.r2.fastq.gz"), emit: ch_fastq
+    tuple val(library), val(type), val(sample), val(replicate), path("${library}.ref.fasta"), emit: ch_ref, optional: true
 
     script:
     def file_read1 = file("${directory}/${read1}")
@@ -36,11 +36,15 @@ process CHECK_FILES {
     def valid_read_ext = [".fq", ".fastq", ".fq.gz", ".fastq.gz"]
     def valid_ref_ext = [".fa", ".fasta"]
 
-    def valid_libraries = ["enhancer", "promoter", "random", "ts_promoter", "ts_random"]
+    def valid_libraries = ["enhancer", "promoter", "random"]
     if (!valid_libraries.contains(library)) {
         error("Error: library '${library}' is invalid. Expected one of: ${valid_libraries.join(', ')}")
     }
 
+    def valid_types = ["input", "output", "template"]
+    if (!valid_types.contains(type)) {
+        error("Error: type '${type}' is invalid. Expected one of: ${valid_types.join(', ')}")
+    }
     if (file_read1.exists()) {
         if (!valid_read_ext.any { read1.endsWith(it) }) {
             error("Error: File format for ${read1} is incorrect. Expected one of: ${valid_read_ext.join(', ')}")
@@ -67,10 +71,10 @@ process CHECK_FILES {
         }
     }
 
-    def prefix = "${library}_${sample}_${replicate}"
+    def prefix = "${library}_${type}_${sample}_${replicate}"
 
     """
-    echo "Checking: ${sample}"
+    echo "Checking: ${prefix}"
 
     if [[ "${file_read1}" == *.fq || "${file_read1}" == *.fastq ]]; then
         gzip -c ${file_read1} > ${prefix}.r1.fastq.gz
@@ -85,7 +89,7 @@ process CHECK_FILES {
     fi
 
     if [[ ${library} == "enhancer" ]]; then
-        ln -s ${file_reference} ${library}.ref.fasta
+        ln -s ${file_reference} ${prefix}.ref.fasta
     fi
     """
 }

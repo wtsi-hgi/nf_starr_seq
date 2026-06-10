@@ -3,17 +3,17 @@ process FASTP {
 
     publishDir "${params.outdir}/res_fastp", mode: 'copy'
 
-    tag "${library}_${sample}_${replicate}"
+    tag "${library}_${type}_${sample}_${replicate}"
 
     input:
-    tuple val(library), val(sample), val(replicate), path(read1), path(read2)
+    tuple val(library), val(type), val(sample), val(replicate), path(read1), path(read2)
 
     output:
-    tuple val(library), val(sample), val(replicate), path("${prefix}.dedup.r1.fastq.gz"), path("${prefix}.dedup.r2.fastq.gz"), emit: ch_dedup_fastq
-    tuple val(library), val(sample), val(replicate), path("${prefix}.dedup_stats.tsv"), emit: ch_dedup_stats
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.dedup.r1.fastq.gz"), path("${prefix}.dedup.r2.fastq.gz"), emit: ch_dedup_fastq
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.dedup_stats.tsv"), emit: ch_dedup_stats
 
     script:
-    def prefix = "${library}_${sample}_${replicate}"
+    def prefix = "${library}_${type}_${sample}_${replicate}"
     def fastp_umi_args = ""
 
     if (library != "enhancer") {

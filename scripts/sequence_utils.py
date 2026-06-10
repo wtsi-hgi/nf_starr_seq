@@ -1,7 +1,7 @@
 import re
 import numpy as np
 import subprocess
-import Levenshtein
+# import Levenshtein
 
 def pigz_open(path: str):
     """
@@ -118,26 +118,26 @@ def match_hamming_numpy(seq: str, pattern: str, max_mismatches: int) -> int:
     matches = np.where(mismatches <= max_mismatches)[0]
     return int(matches[0]) if matches.size > 0 else -1
 
-def match_levenshtein(seq: str, pattern: str, max_mismatches: int) -> int:
-    """
-    Find approximate match of pattern in seq by levenshtein distance allowing max_mismatches
-    Parameters:
-        -- seq: the sequence to search in
-        -- pattern: the pattern to match
-        -- max_mismatches: maximum number of mismatches allowed
-    Returns:
-        -- int: start index of the match or -1 if not found
-    """
-    k = len(pattern)
-    n = len(seq)
-    if k > n:
-        return -1
+# def match_levenshtein(seq: str, pattern: str, max_mismatches: int) -> int:
+#     """
+#     Find approximate match of pattern in seq by levenshtein distance allowing max_mismatches
+#     Parameters:
+#         -- seq: the sequence to search in
+#         -- pattern: the pattern to match
+#         -- max_mismatches: maximum number of mismatches allowed
+#     Returns:
+#         -- int: start index of the match or -1 if not found
+#     """
+#     k = len(pattern)
+#     n = len(seq)
+#     if k > n:
+#         return -1
 
-    for i in range(n - k + 1):
-        window = seq[i:i+k]
-        if Levenshtein.distance(window, pattern) <= max_mismatches:
-            return i
-    return -1
+#     for i in range(n - k + 1):
+#         window = seq[i:i+k]
+#         if Levenshtein.distance(window, pattern) <= max_mismatches:
+#             return i
+#     return -1
 
 def match_approximate(seq: str, pattern: str, max_mismatches: int, distance: str) -> int:
     """
@@ -151,8 +151,8 @@ def match_approximate(seq: str, pattern: str, max_mismatches: int, distance: str
     """
     if distance == "hamming":
         return match_hamming_numpy(seq, pattern, max_mismatches)
-    elif distance == "levenshtein":
-        return match_levenshtein(seq, pattern, max_mismatches)
+    # elif distance == "levenshtein":
+    #     return match_levenshtein(seq, pattern, max_mismatches)
     else:
         raise ValueError(f"Unknown distance metric: {distance}")
 
