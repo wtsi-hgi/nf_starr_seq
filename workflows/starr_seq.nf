@@ -8,6 +8,7 @@ include { FLASH2 }                    from "$projectDir/modules/local/flash2/mai
 /* -- load subworkflows -- */
 include { check_input_files }         from "$projectDir/subworkflows/check_input_files.nf"
 include { preprocess }                from "$projectDir/subworkflows/preprocess.nf"
+include { process_enhancer_lib }      from "$projectDir/subworkflows/process_enhancer_lib.nf"
 
 /* -- define functions -- */
 def helpMessage() {
@@ -88,39 +89,41 @@ def check_required(required_tools) {
 }
 
 /* -- initialising parameters -- */
-params.help                 = false
-params.version              = false
-params.pipeline_name        = workflow.manifest.name
-params.pipeline_version     = workflow.manifest.version
+params.help                    = false
+params.version                 = false
+params.pipeline_name           = workflow.manifest.name
+params.pipeline_version        = workflow.manifest.version
 
-params.sample_sheet         = null
-params.outdir               = params.outdir               ?: "$PWD"
+params.sample_sheet            = null
+params.outdir                  = params.outdir                  ?: "$PWD"
 
-params.ct_a                 = params.ct_a                 ?: null
-params.ct_g                 = params.ct_g                 ?: null
-params.ct_A                 = params.ct_A                 ?: null
-params.ct_G                 = params.ct_G                 ?: null
-params.ct_O                 = params.ct_O                 ?: 3
-params.ct_e                 = params.ct_e                 ?: 0.1
-params.ct_m                 = params.ct_m                 ?: 0
-params.ct_action            = params.ct_action            ?: "trim"
+params.ct_a                    = params.ct_a                    ?: null
+params.ct_g                    = params.ct_g                    ?: null
+params.ct_A                    = params.ct_A                    ?: null
+params.ct_G                    = params.ct_G                    ?: null
+params.ct_O                    = params.ct_O                    ?: 3
+params.ct_e                    = params.ct_e                    ?: 0.1
+params.ct_m                    = params.ct_m                    ?: 0
+params.ct_action               = params.ct_action               ?: "trim"
 
-params.skip_dedup           = false
-params.has_umi              = false
+params.skip_dedup              = false
+params.has_umi                 = false
+params.fp_q                    = params.fp_q                    ?: 20
+params.fp_u                    = params.fp_u                    ?: 30
+params.fp_dup_calc_accuracy    = params.fp_dup_calc_accuracy    ?: 6
+params.fp_umi_loc              = params.fp_umi_loc              ?: null
+params.fp_umi_len              = params.fp_umi_len              ?: 10
+params.fp_umi_prefix           = params.fp_umi_prefix           ?: null
+params.fp_umi_skip             = params.fp_umi_skip             ?: 0
+params.fp_umi_delim            = params.fp_umi_delim            ?: ":"
 
-params.fp_q                 = params.fp_q                 ?: 20
-params.fp_u                 = params.fp_u                 ?: 30
-params.fp_dup_calc_accuracy = params.fp_dup_calc_accuracy ?: 6
-params.fp_umi_loc           = params.fp_umi_loc           ?: null
-params.fp_umi_len           = params.fp_umi_len           ?: 10
-params.fp_umi_prefix        = params.fp_umi_prefix        ?: null
-params.fp_umi_skip          = params.fp_umi_skip          ?: 0
-params.fp_umi_delim         = params.fp_umi_delim         ?: ":"
-
-params.f2_min_overlap       = params.f2_min_overlap       ?: 10
-params.f2_max_overlap       = params.f2_max_overlap       ?: 150
-params.f2_min_overlap_outie = params.f2_min_overlap_outie ?: 20
+params.skip_flash2             = false
+params.f2_min_overlap          = params.f2_min_overlap          ?: 10
+params.f2_max_overlap          = params.f2_max_overlap          ?: 150
+params.f2_min_overlap_outie    = params.f2_min_overlap_outie    ?: 20
 params.f2_max_mismatch_density = params.f2_max_mismatch_density ?: 0.25
+
+params.reference               = params.reference               ?: "hg38"
 
 /* -- pipeline info -- */
 log.info """
@@ -148,7 +151,7 @@ if (params.sample_sheet) {
                       .splitCsv(header: true, sep: sep)
     
     // check required columns
-    def required_cols = ['library', 'type', 'sample', 'replicate', 'directory', 'read1', 'read2', 'reference']
+    def required_cols = ['library', 'type', 'sample', 'replicate', 'directory', 'read1', 'read2', 'reference', 'barcode']
     def header_line = new File(params.sample_sheet).readLines().head()
     def header = header_line.split(sep)
     def missing = required_cols.findAll { !(it in header) }
@@ -214,41 +217,35 @@ workflow starr_seq {
 
     /* -- check input files exist -- */
     check_input_files(ch_input)
-    ch_fastq = check_input_files.out.ch_fastq
-    ch_ref   = check_input_files.out.ch_ref
+    ch_fastq   = check_input_files.out.ch_fastq
+    ch_ref     = check_input_files.out.ch_ref
+    ch_barcode = check_input_files.out.ch_barcode
 
     /* -- preprocess -- */
     preprocess(ch_fastq)
     ch_preprocessed_fastq = preprocess.out.ch_preprocessed_fastq
 
+    /* -- split by library -- */
+    ch_preprocessed_fastq
+        .branch {
+            enhancer: it[0] == "enhancer"
+            promoter: it[0] == "promoter"
+            random:   it[0] == "random"
+        }
+        .set { ch_preprocessed_by_lib }
+
+    ch_enhancer = ch_preprocessed_by_lib.enhancer
+    ch_promoter = ch_preprocessed_by_lib.promoter
+    ch_random   = ch_preprocessed_by_lib.random
+
+    /* -- process enhancer library -- */
+    ch_enhancer = ch_enhancer.join(ch_ref, by: [0,1,2,3])
+    process_enhancer_lib(ch_enhancer)
+
+    /* -- process promoter library -- */
 
 
-
-
-
-
-
-
-
-
-
-
-
-    /* -- deduplication -- */
-    if (params.skip_dedup) {
-        ch_dedup_fastq = ch_preprocessed_fastq
-        ch_dedup_stat = Channel.empty()
-    } else {
-        FASTP(ch_preprocessed_fastq)
-        ch_dedup_fastq = FASTP.out.ch_dedup_fastq
-        ch_dedup_stat = FASTP.out.ch_dedup_stat
-    }
-
-    /* -- merging reads -- */
-    FLASH2(ch_dedup_fastq)
-    ch_extended_frags = FLASH2.out.ch_extended_frags
-    ch_not_combined = FLASH2.out.ch_not_combined
-    ch_merge_stats = FLASH2.out.ch_merge_stats
+    /* -- process random library -- */
 
 
 }
