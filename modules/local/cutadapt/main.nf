@@ -1,7 +1,7 @@
 process CUTADAPT {
     label 'process_low'
 
-    publishDir "${params.outdir}/res_cutadapt", mode: 'copy'
+    // publishDir "${params.outdir}/res_cutadapt", mode: 'copy'
 
     tag "${library}_${type}_${sample}_${replicate}"
 

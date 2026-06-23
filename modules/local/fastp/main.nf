@@ -1,7 +1,7 @@
 process FASTP {
     label 'process_low'
 
-    publishDir "${params.outdir}/res_fastp", mode: 'copy'
+    // publishDir "${params.outdir}/res_fastp", mode: 'copy'
 
     tag "${library}_${type}_${sample}_${replicate}"
 
