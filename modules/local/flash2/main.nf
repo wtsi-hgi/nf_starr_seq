@@ -12,7 +12,7 @@ process FLASH2 {
         "${mem * task.attempt} GB"
     }
 
-    publishDir "${params.outdir}/res_flash2", mode: 'copy'
+    // publishDir "${params.outdir}/res_flash2", mode: 'copy'
 
     tag "${library}_${type}_${sample}_${replicate}"
 
@@ -27,30 +27,20 @@ process FLASH2 {
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
 
-    if (type in ["input", "output"])
-    {
-        """
-        flash2 --min-overlap          ${params.f2_min_overlap} \
-               --max-overlap          ${params.f2_max_overlap} \
-               --min-overlap-outie    ${params.f2_min_overlap_outie} \
-               --max-mismatch-density ${params.f2_max_mismatch_density} \
-               --threads              ${task.cpus} \
-               --output-prefix        ${prefix} \
-               --output-directory     . \
-               --compress \
-               ${read1} ${read2} 2>&1 | tee ${prefix}.merge_stats.tsv
+    """
+    flash2 --min-overlap          ${params.f2_min_overlap} \
+           --max-overlap          ${params.f2_max_overlap} \
+           --min-overlap-outie    ${params.f2_min_overlap_outie} \
+           --max-mismatch-density ${params.f2_max_mismatch_density} \
+           --threads              ${task.cpus} \
+           --output-prefix        ${prefix} \
+           --output-directory     . \
+           --compress \
+           ${read1} ${read2} 2>&1 | tee ${prefix}.merge_stats.tsv
 
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            flash2: \$( flash2 --version | head -n 1 | awk '{print \$2}' )
-        END_VERSIONS
-        """
-    } else {
-        """
-        ln -s ${read1} ${prefix}.notCombined_1.fastq.gz
-        ln -s ${read2} ${prefix}.notCombined_2.fastq.gz
-        echo "empty_fastq" | gzip > ${prefix}.extendedFrags.fastq.gz        
-        echo -e "[FLASH]     Combined pairs:    0" > ${prefix}.merge_stats.tsv
-        """
-    }
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        flash2: \$( flash2 --version | head -n 1 | awk '{print \$2}' )
+    END_VERSIONS
+    """
 }
