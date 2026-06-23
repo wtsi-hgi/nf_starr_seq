@@ -123,6 +123,19 @@ process CHECK_FILES {
 
     def prefix = "${library}_${type}_${sample}_${replicate}"
 
+    def resource_ref = file("${projectDir}/assets/resources/${reference}")
+    def link_reference = null
+
+    if (file_reference != null) {
+        if (resource_ref.exists()) {
+            log.info "Using reference from resources: ${resource_ref}"
+            link_reference = resource_ref
+        } else {
+            log.info "Using reference from sample sheet: ${file_reference}"
+            link_reference = file_reference
+        }
+    }
+
     """
     echo "Checking: ${prefix}"
 
@@ -138,7 +151,7 @@ process CHECK_FILES {
         ln -s ${file_read2} ${prefix}.r2.fastq.gz
     fi
 
-    ${file_reference != null ? "ln -s ${file_reference} ${prefix}.ref.fasta" : ""}
+    ${link_reference != null ? "ln -s ${link_reference} ${prefix}.ref.fasta" : ""}
 
     ${file_barcode != null ? "ln -s ${file_barcode} ${prefix}.barcode.tsv" : ""}
     """
