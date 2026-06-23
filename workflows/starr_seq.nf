@@ -123,7 +123,10 @@ params.f2_max_overlap          = params.f2_max_overlap          ?: 150
 params.f2_min_overlap_outie    = params.f2_min_overlap_outie    ?: 20
 params.f2_max_mismatch_density = params.f2_max_mismatch_density ?: 0.25
 
-params.reference               = params.reference               ?: "hg38"
+params.bwa_mismatch            = params.bwa_mismatch            ?: 4
+params.bwa_gap_open            = params.bwa_gap_open            ?: "10,10"
+params.bwa_gap_ext             = params.bwa_gap_ext             ?: "5,5"
+params.bwa_clip                = params.bwa_clip                ?: "1,1"
 
 /* -- pipeline info -- */
 log.info """
