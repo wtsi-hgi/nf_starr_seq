@@ -11,20 +11,20 @@ workflow check_input_files {
     ch_validated = ch_input
         .collect()
         .map { rows ->
-            def libraries = rows.collect { it[0] }.unique()
-            libraries.each { lib ->
-                def lib_rows = rows.findAll { it[0] == lib }
-                def has_output = lib_rows.any { it[1] == "output" }
-                def has_input  = lib_rows.any { it[1] == "input" }
+            def lib_sample_keys = rows.collect { [it[0], it[2]] }.unique()
+            lib_sample_keys.each { lib, sample ->
+                def group_rows  = rows.findAll { it[0] == lib && it[2] == sample }
+                def has_output  = group_rows.any { it[1] == "output" }
+                def has_input   = group_rows.any { it[1] == "input" }
                 if (lib == "enhancer") {
                     if (has_output && !has_input) {
-                        throw new IllegalArgumentException("Error: library '${lib}' has output but no input in the sample sheet.")
+                        throw new IllegalArgumentException("Error: library '${lib}' sample '${sample}' has output but no input in the sample sheet.")
                     }
                 } else if (lib in ["promoter", "random"]) {
                     if (has_output) {
-                        def output_no_barcode = lib_rows.any { it[1] == "output" && (!it[8] || it[8].trim() == '') }
+                        def output_no_barcode = group_rows.any { it[1] == "output" && (!it[8] || it[8].trim() == '') }
                         if (output_no_barcode && !has_input) {
-                            throw new IllegalArgumentException("Error: library '${lib}' has output with no barcode but no input in the sample sheet.")
+                            throw new IllegalArgumentException("Error: library '${lib}' sample '${sample}' has output with no barcode but no input in the sample sheet.")
                         }
                     }
                 }
