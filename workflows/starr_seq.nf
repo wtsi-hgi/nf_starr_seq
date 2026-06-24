@@ -51,7 +51,13 @@ Usage:
         --f2_min_overlap_outie        min overlap outie for flash2, default: 20
         --f2_max_mismatch_density     max mismatch density for flash2, default: 0.25
 
-    
+    BWA:
+        --
+
+    MACS3:
+
+    StarrPeaker:
+        
     
 
     """
@@ -127,6 +133,10 @@ params.bwa_mismatch            = params.bwa_mismatch            ?: 4
 params.bwa_gap_open            = params.bwa_gap_open            ?: "10,10"
 params.bwa_gap_ext             = params.bwa_gap_ext             ?: "5,5"
 params.bwa_clip                = params.bwa_clip                ?: "1,1"
+
+params.macs3_g                 = params.macs3_g                 ?: "hs"
+params.macs3_q                 = params.macs3_q                 ?: 0.05
+params.macs3_extsize           = params.macs3_extsize           ?: 200
 
 /* -- pipeline info -- */
 log.info """
