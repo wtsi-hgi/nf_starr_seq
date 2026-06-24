@@ -7,7 +7,8 @@ process BWA_SE {
     tuple val(library), val(type), val(sample), val(replicate), path(reference), path(read)
 
     output:
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.bam"), emit: ch_se_bam
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.unique.sort.bam"), path("${prefix}.unique.sort.bam.bai"), emit: ch_bam
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.flagstat.txt"), path("${prefix}.unique.flagstat.txt"), emit: ch_flagstat
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
@@ -16,7 +17,7 @@ process BWA_SE {
                       "${projectDir}/assets/resources/${ref_base}.ann", 
                       "${projectDir}/assets/resources/${ref_base}.bwt", 
                       "${projectDir}/assets/resources/${ref_base}.pac", 
-                      "${projectDir}/assets/resources/${ref_base}.sa"  ]
+                      "${projectDir}/assets/resources/${ref_base}.sa"   ]
 
     def has_index = bwa_index.every { file(it).exists() }
 
@@ -28,10 +29,12 @@ process BWA_SE {
                 -E ${params.bwa_gap_ext} \
                 -L ${params.bwa_clip} \
                 ${reference} ${read} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+        samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
         samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
         samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
         samtools index ${prefix}.unique.sort.bam
+        samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
         rm ${prefix}.unique.bam
 
         cat <<-END_VERSIONS > versions.yml
@@ -50,10 +53,12 @@ process BWA_SE {
                 -E ${params.bwa_gap_ext} \
                 -L ${params.bwa_clip} \
                 ${reference} ${read} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+        samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
         samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
         samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
         samtools index ${prefix}.unique.sort.bam
+        samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
         rm ${prefix}.unique.bam
 
         cat <<-END_VERSIONS > versions.yml
@@ -74,7 +79,8 @@ process BWA_PE {
     tuple val(library), val(type), val(sample), val(replicate), path(reference), path(read1), path(read2)
 
     output:
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.bam"), emit: ch_pe_bam
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.unique.sort.bam"), path("${prefix}.unique.sort.bam.bai"), emit: ch_bam
+    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.flagstat.txt"), path("${prefix}.unique.flagstat.txt"), emit: ch_flagstat
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
@@ -95,10 +101,12 @@ process BWA_PE {
                 -E ${params.bwa_gap_ext} \
                 -L ${params.bwa_clip} \
                 ${reference} ${read1} ${read2} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+        samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
         samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
         samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
         samtools index ${prefix}.unique.sort.bam
+        samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
         rm ${prefix}.unique.bam
 
         cat <<-END_VERSIONS > versions.yml
@@ -117,10 +125,12 @@ process BWA_PE {
                 -E ${params.bwa_gap_ext} \
                 -L ${params.bwa_clip} \
                 ${reference} ${read1} ${read2} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+        samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
-        samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
+        samtools view -@ ${task.cpus} -b -f 2 -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
         samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
         samtools index ${prefix}.unique.sort.bam
+        samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
         rm ${prefix}.unique.bam
 
         cat <<-END_VERSIONS > versions.yml
