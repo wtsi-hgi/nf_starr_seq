@@ -15,7 +15,7 @@ process STARRPEAKER_CALLPEAKS {
     publishDir "${params.outdir}/enhancer_peaks/${prefix}/starrpeaker", mode: "copy", overwrite: true
 
     input:
-    tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai), path(reference)
+    tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai), val(reference)
 
     output:
     tuple val(library), val(sample), val(replicate), 
@@ -28,12 +28,11 @@ process STARRPEAKER_CALLPEAKS {
     def prefix = "${library}_${sample}_${replicate}"
     def do_se = params.skip_flash2 ? "" : "--se"
 
-    def ref_base  = reference.baseName
-    def chromsize = "${params.resource}/starrpeaker/${ref_base}.chromsize.tsv"
-    def blacklist = "${params.resource}/starrpeaker/${ref_base}.blacklist.bed"
-    def gc_file   = "${params.resource}/starrpeaker/${ref_base}.ucsc-gc-5bp.bw"
-    def map_file  = "${params.resource}/starrpeaker/${ref_base}.gem-mappability-100mer.bw"
-    def fold_file = "${params.resource}/starrpeaker/${ref_base}.linearfold-folding-energy-100bp.bw"
+    def chromsize = "${params.resource}/starrpeaker/${reference}.chromsize.tsv"
+    def blacklist = "${params.resource}/starrpeaker/${reference}.blacklist.bed"
+    def gc_file   = "${params.resource}/starrpeaker/${reference}.ucsc-gc-5bp.bw"
+    def map_file  = "${params.resource}/starrpeaker/${reference}.gem-mappability-100mer.bw"
+    def fold_file = "${params.resource}/starrpeaker/${reference}.linearfold-folding-energy-100bp.bw"
 
     """
     starrpeaker ${do_se} \
