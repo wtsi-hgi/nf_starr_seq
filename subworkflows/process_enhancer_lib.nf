@@ -11,16 +11,16 @@ workflow process_enhancer_lib {
 
     main:
     ch_fastq = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference ->
-                                            tuple(library, type, sample, replicate, read1, read2) }
+                                    tuple(library, type, sample, replicate, read1, read2) }
     
     /* -- remove duplicated reads -- */
     if (params.skip_dedup) {
         ch_dedup_fastq = ch_fastq
-        ch_dedup_stat = Channel.empty()
+        ch_dedup_stats = Channel.empty()
     } else {
         FASTP(ch_fastq)
         ch_dedup_fastq = FASTP.out.ch_dedup_fastq
-        ch_dedup_stat = FASTP.out.ch_dedup_stat
+        ch_dedup_stats = FASTP.out.ch_dedup_stats
     }
 
     /* -- merge reads if needed and align reads -- */
@@ -84,19 +84,17 @@ workflow process_enhancer_lib {
 
     ch_starrpeaker_sets = ch_starrpeaker_sets.filter { 
         library, sample, replicate, output_bam, output_bai, input_bam, input_bai, reference ->
-
-        def ref_base = reference.baseName
         def files = [
-            "${params.resource}/starrpeaker/${ref_base}.chromsize.tsv",
-            "${params.resource}/starrpeaker/${ref_base}.blacklist.bed",
-            "${params.resource}/starrpeaker/${ref_base}.ucsc-gc-5bp.bw",
-            "${params.resource}/starrpeaker/${ref_base}.gem-mappability-100mer.bw",
-            "${params.resource}/starrpeaker/${ref_base}.linearfold-folding-energy-100bp.bw"
+            "${params.resource}/starrpeaker/${reference}.chromsize.tsv",
+            "${params.resource}/starrpeaker/${reference}.blacklist.bed",
+            "${params.resource}/starrpeaker/${reference}.ucsc-gc-5bp.bw",
+            "${params.resource}/starrpeaker/${reference}.gem-mappability-100mer.bw",
+            "${params.resource}/starrpeaker/${reference}.linearfold-folding-energy-100bp.bw"
         ]
 
         def has_files = files.every { file(it).exists() }
         if (!has_files) {
-            log.warn "Skipping STARRPeaker for ${ref_base}: missing resource files"
+            log.warn "Skipping STARRPeaker for ${reference}: missing resource files"
         }
 
         return has_files

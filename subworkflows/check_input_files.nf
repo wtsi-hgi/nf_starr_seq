@@ -54,19 +54,10 @@ process CHECK_FILES {
 
     output:
     tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.r1.fastq.gz"), path("${prefix}.r2.fastq.gz"), emit: ch_fastq
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.ref.fasta"),   emit: ch_ref,     optional: true
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.barcode.tsv"), emit: ch_barcode, optional: true
+    tuple val(library), val(type), val(sample), val(replicate), val(reference), emit: ch_ref, optional: true
+    tuple val(library), val(type), val(sample), val(replicate), path(barcode), emit: ch_barcode, optional: true
 
     script:
-    def file_read1     = file("${directory}/${read1}")
-    def file_read2     = file("${directory}/${read2}")
-    def file_reference = (reference && reference.trim() != '') ? file("${directory}/${reference}") : null
-    def file_barcode   = (barcode   && barcode.trim()   != '') ? file("${directory}/${barcode}")   : null
-
-    def valid_read_ext = [".fq", ".fastq", ".fq.gz", ".fastq.gz"]
-    def valid_ref_ext  = [".fa", ".fasta"]
-    def valid_bar_ext  = [".tsv"]
-
     def valid_libraries = ["enhancer", "promoter", "random"]
     if (!valid_libraries.contains(library)) {
         error("Error: library '${library}' is invalid. Expected one of: ${valid_libraries.join(', ')}")
@@ -77,6 +68,9 @@ process CHECK_FILES {
         error("Error: type '${type}' is invalid. Expected one of: ${valid_types.join(', ')}")
     }
 
+    def valid_read_ext = [".fq", ".fastq", ".fq.gz", ".fastq.gz"]
+    def file_read1   = file("${directory}/${read1}")
+    def file_read2   = file("${directory}/${read2}")
     if (file_read1.exists()) {
         if (!valid_read_ext.any { read1.endsWith(it) }) {
             error("Error: File format for ${read1} is incorrect. Expected one of: ${valid_read_ext.join(', ')}")
@@ -93,25 +87,31 @@ process CHECK_FILES {
         error("Error: ${read2} is not found in ${directory}.")
     }
 
+    def valid_references = ['hg38']
     if (library == "enhancer") {
-        if (file_reference == null) {
+        if (reference == '' or reference == null) {
             error("Error: reference is required for library '${library}' but is empty.")
         }
-        if (!file_reference.exists()) {
-            error("Error: ${reference} is not found in ${directory}.")
+        if (!valid_references.contains(reference)) {
+            error("Error: reference '${reference}' is invalid. Expected one of: ${valid_references.join(', ')}")
         }
-        if (!valid_ref_ext.any { reference.endsWith(it) }) {
-            error("Error: File format for ${reference} is incorrect. Expected one of: ${valid_ref_ext.join(', ')}")
-        }
-    } else if (file_reference != null) {
-        if (!file_reference.exists()) {
-            error("Error: ${reference} is not found in ${directory}.")
-        }
-        if (!valid_ref_ext.any { reference.endsWith(it) }) {
-            error("Error: File format for ${reference} is incorrect. Expected one of: ${valid_ref_ext.join(', ')}")
+    
+        def bwa_files = [
+            "${params.resource}/bwa_index/${reference}.amb",
+            "${params.resource}/bwa_index/${reference}.ann",
+            "${params.resource}/bwa_index/${reference}.bwt",
+            "${params.resource}/bwa_index/${reference}.pac",
+            "${params.resource}/bwa_index/${reference}.sa"
+        ]
+
+        def has_files = files.every { file(it).exists() }
+        if (!has_files) {
+            error("Missing bwa index in the ${params.resource}/bwa_index for ${reference}")
         }
     }
 
+    def valid_bar_ext  = [".tsv"]
+    def file_barcode = (barcode && barcode.trim() != '') ? file("${directory}/${barcode}") : null
     if (file_barcode != null) {
         if (!file_barcode.exists()) {
             error("Error: ${barcode} is not found in ${directory}.")
@@ -122,19 +122,6 @@ process CHECK_FILES {
     }
 
     def prefix = "${library}_${type}_${sample}_${replicate}"
-
-    def resource_ref = file("${projectDir}/assets/resources/${reference}")
-    def link_reference = null
-
-    if (file_reference != null) {
-        if (resource_ref.exists()) {
-            log.info "Using reference from resources: ${resource_ref}"
-            link_reference = resource_ref
-        } else {
-            log.info "Using reference from sample sheet: ${file_reference}"
-            link_reference = file_reference
-        }
-    }
 
     """
     echo "Checking: ${prefix}"
@@ -150,9 +137,5 @@ process CHECK_FILES {
     else
         ln -s ${file_read2} ${prefix}.r2.fastq.gz
     fi
-
-    ${link_reference != null ? "ln -s ${link_reference} ${prefix}.ref.fasta" : ""}
-
-    ${file_barcode != null ? "ln -s ${file_barcode} ${prefix}.barcode.tsv" : ""}
     """
 }
