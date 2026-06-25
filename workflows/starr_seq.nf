@@ -52,9 +52,15 @@ Usage:
         --f2_max_mismatch_density     max mismatch density for flash2, default: 0.25
 
     BWA:
-        --
+        --bwa_mismatch                mismatch penalty for BWA, default: 4
+        --bwa_gap_open                gap open penalty for BWA, default: 10,10
+        --bwa_gap_ext                 gap extension penalty for BWA, default: 5,5
+        --bwa_clip                    clip penalty for BWA, default: 1,1
 
     MACS3:
+        --macs3_g                     effective genome size, [hs, mm, ce, dm], default: hs
+        --macs3_q                     minimum FDR (q-value) cutoff for peak detection, default: 0.05
+        --macs3_extsize               when nomodel is true, MACS will use this value as fragment size
 
     StarrPeaker:
         
@@ -173,11 +179,13 @@ if (params.sample_sheet) {
         error "Error: Sample sheet is missing required columns - ${missing.join(', ')}"
     } else {
         def sheet_file = file(params.sample_sheet)
-        log.info("=====================================")
-        log.info("Sample sheet content:")
-        log.info("-------------------------------------")
-        log.info(sheet_file.text)
-        log.info("=====================================")
+        log.info """
+        =====================================
+        sample sheet content:
+        -------------------------------------
+        ${sheet_file.text}
+        =====================================
+        """
     }
 } else {
     error("Error: Please specify the full path of the sample sheet!\n")
