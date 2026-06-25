@@ -19,7 +19,8 @@ Usage:
     Mandatory arguments:
         --sample_sheet                path of the sample sheet
         --outdir                      the directory path of output results, default: the current directory
-    
+        --resource                    the directory path of resource files, default: null
+
     Optional arguments:
     Cutadapt:
         --ct_a                        Sequence of an adapter ligated to the 3' end (paired data: of the first read)
@@ -108,6 +109,7 @@ params.pipeline_version        = workflow.manifest.version
 
 params.sample_sheet            = null
 params.outdir                  = params.outdir                  ?: "$PWD"
+params.resource                = params.resource                ?: null
 
 params.ct_a                    = params.ct_a                    ?: null
 params.ct_g                    = params.ct_g                    ?: null
@@ -199,6 +201,10 @@ if (!outdir.exists()) {
 
 if (!file(params.outdir).isDirectory()) {
     error("Invalid output directory: ${params.outdir}. Please specify a valid directory.")
+}
+
+if (!file(params.resource).isDirectory()) {
+    error("Invalid resource directory: ${params.resource}. Please specify a valid directory.")
 }
 
 if (params.has_umi) {
