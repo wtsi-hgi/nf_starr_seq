@@ -13,7 +13,7 @@ process STARRPEAKER_CALLPEAKS {
     tag "${library}_${sample}_${replicate}"
 
     input:
-    tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai), path(ref)
+    tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai), path(reference)
 
     output:
     tuple val(library), val(sample), val(replicate), 
@@ -25,8 +25,15 @@ process STARRPEAKER_CALLPEAKS {
     script:
     def prefix = "${library}_${sample}_${replicate}"
     def do_se = params.skip_flash2 ? "" : "--se"
+    def ref_base  = reference.baseName
 
-    def cov_files = ""
+    def chromsize = "${projectDir}/assets/resources/starrpeaker/${ref_base}.chromsize.tsv"
+    def blacklist = "${projectDir}/assets/resources/starrpeaker/${ref_base}.blacklist.bed"
+    def gc_file   = "${projectDir}/assets/resources/starrpeaker/${ref_base}.ucsc-gc-5bp.bw"
+    def map_file  = "${projectDir}/assets/resources/starrpeaker/${ref_base}.gem-mappability-100mer.bw"
+    def fold_file = "${projectDir}/assets/resources/starrpeaker/${ref_base}.linearfold-folding-energy-100bp.bw"
+
+    
 
 
     """
