@@ -64,9 +64,12 @@ Usage:
         --macs3_extsize               when nomodel is true, MACS will use this value as fragment size
 
     StarrPeaker:
-        
-    
-
+        --sp_threshold                starrpeaker threshold, default: 0.05
+        --sp_length                   bin length, default: 500
+        --sp_step                     step size, default: 100
+        --sp_min                      minimum template size, default: 0
+        --sp_max                      maximum template size, default: 1000
+        --sp_mincov                   minimum Coverage, default: 0
     """
 }
 
@@ -145,6 +148,13 @@ params.bwa_clip                = params.bwa_clip                ?: "1,1"
 params.macs3_g                 = params.macs3_g                 ?: "hs"
 params.macs3_q                 = params.macs3_q                 ?: 0.05
 params.macs3_extsize           = params.macs3_extsize           ?: 200
+
+params.sp_threshold            = params.sp_threshold            ?: 0.05
+params.sp_length               = params.sp_length               ?: 500
+params.sp_step                 = params.sp_step                 ?: 100
+params.sp_min                  = params.sp_min                  ?: 0
+params.sp_max                  = params.sp_max                  ?: 1000
+params.sp_mincov               = params.sp_mincov               ?: 0
 
 /* -- pipeline info -- */
 log.info """
