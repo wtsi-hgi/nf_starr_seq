@@ -15,6 +15,8 @@ process FASTQC {
     def prefix = "${library}_${type}_${sample}_${replicate}"
 
     """
+    mkdir ${prefix}
+    
     fastqc --threads ${task.cpus} --outdir ${prefix} ${read1} ${read2}
 
     cat <<-END_VERSIONS > versions.yml
