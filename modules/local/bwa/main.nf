@@ -4,7 +4,7 @@ process BWA_SE {
     tag "${library}_${type}_${sample}_${replicate}"
 
     input:
-    tuple val(library), val(type), val(sample), val(replicate), path(reference), path(read)
+    tuple val(library), val(type), val(sample), val(replicate), val(reference), path(read)
 
     output:
     tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.unique.sort.bam"), path("${prefix}.unique.sort.bam.bai"), emit: ch_bam
@@ -12,62 +12,29 @@ process BWA_SE {
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
-    def ref_base = reference.baseName
-    def bwa_index = [ "${params.resource}/bwa_index/${ref_base}.amb", 
-                      "${params.resource}/bwa_index/${ref_base}.ann", 
-                      "${params.resource}/bwa_index/${ref_base}.bwt", 
-                      "${params.resource}/bwa_index/${ref_base}.pac", 
-                      "${params.resource}/bwa_index/${ref_base}.sa"   ]
+    def bwa_index = "${params.resource}/bwa_index/${reference}"
 
-    def has_index = bwa_index.every { file(it).exists() }
+    """
+    bwa mem -t ${task.cpus} \
+            -B ${params.bwa_mismatch} \
+            -O ${params.bwa_gap_open} \
+            -E ${params.bwa_gap_ext} \
+            -L ${params.bwa_clip} \
+            ${bwa_index} ${read} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+    samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
-    if( has_index ) {
-        """
-        bwa mem -t ${task.cpus} \
-                -B ${params.bwa_mismatch} \
-                -O ${params.bwa_gap_open} \
-                -E ${params.bwa_gap_ext} \
-                -L ${params.bwa_clip} \
-                ${ref_base} ${read} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
-        samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
+    samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
+    samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
+    samtools index ${prefix}.unique.sort.bam
+    samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
+    rm ${prefix}.unique.bam
 
-        samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
-        samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
-        samtools index ${prefix}.unique.sort.bam
-        samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
-        rm ${prefix}.unique.bam
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            bwa: \$( bwa 2>&1 | grep -i version | awk '{print \$2}' )
-            samtools: \$( samtools --version | head -n 1 | awk '{print \$2}' )
-        END_VERSIONS
-        """
-    } else {
-        """
-        bwa index ${reference}
-
-        bwa mem -t ${task.cpus} \
-                -B ${params.bwa_mismatch} \
-                -O ${params.bwa_gap_open} \
-                -E ${params.bwa_gap_ext} \
-                -L ${params.bwa_clip} \
-                ${ref_base} ${read} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
-        samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
-
-        samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
-        samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
-        samtools index ${prefix}.unique.sort.bam
-        samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
-        rm ${prefix}.unique.bam
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            bwa: \$( bwa 2>&1 | grep -i version | awk '{print \$2}' )
-            samtools: \$( samtools --version | head -n 1 | awk '{print \$2}' )
-        END_VERSIONS
-        """
-    }
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bwa: \$( bwa 2>&1 | grep -i version | awk '{print \$2}' )
+        samtools: \$( samtools --version | head -n 1 | awk '{print \$2}' )
+    END_VERSIONS
+    """
 }
 
 process BWA_PE {
@@ -76,7 +43,7 @@ process BWA_PE {
     tag "${library}_${type}_${sample}_${replicate}"
 
     input:
-    tuple val(library), val(type), val(sample), val(replicate), path(reference), path(read1), path(read2)
+    tuple val(library), val(type), val(sample), val(replicate), val(reference), path(read1), path(read2)
 
     output:
     tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.unique.sort.bam"), path("${prefix}.unique.sort.bam.bai"), emit: ch_bam
@@ -84,60 +51,27 @@ process BWA_PE {
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
-    def ref_base = reference.baseName
-    def bwa_index = [ "${params.resource}/bwa_index/${ref_base}.amb", 
-                      "${params.resource}/bwa_index/${ref_base}.ann", 
-                      "${params.resource}/bwa_index/${ref_base}.bwt", 
-                      "${params.resource}/bwa_index/${ref_base}.pac", 
-                      "${params.resource}/bwa_index/${ref_base}.sa"   ]
+    def bwa_index = "${params.resource}/bwa_index/${reference}"
+    
+    """
+    bwa mem -t ${task.cpus} \
+            -B ${params.bwa_mismatch} \
+            -O ${params.bwa_gap_open} \
+            -E ${params.bwa_gap_ext} \
+            -L ${params.bwa_clip} \
+            ${bwa_index} ${read1} ${read2} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+    samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
-    def has_index = bwa_index.every { file(it).exists() }
+    samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
+    samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
+    samtools index ${prefix}.unique.sort.bam
+    samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
+    rm ${prefix}.unique.bam
 
-    if( has_index ) {
-        """
-        bwa mem -t ${task.cpus} \
-                -B ${params.bwa_mismatch} \
-                -O ${params.bwa_gap_open} \
-                -E ${params.bwa_gap_ext} \
-                -L ${params.bwa_clip} \
-                ${ref_base} ${read1} ${read2} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
-        samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
-
-        samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
-        samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
-        samtools index ${prefix}.unique.sort.bam
-        samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
-        rm ${prefix}.unique.bam
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            bwa: \$( bwa 2>&1 | grep -i version | awk '{print \$2}' )
-            samtools: \$( samtools --version | head -n 1 | awk '{print \$2}' )
-        END_VERSIONS
-        """
-    } else {
-        """
-        bwa index ${reference}
-
-        bwa mem -t ${task.cpus} \
-                -B ${params.bwa_mismatch} \
-                -O ${params.bwa_gap_open} \
-                -E ${params.bwa_gap_ext} \
-                -L ${params.bwa_clip} \
-                ${ref_base} ${read1} ${read2} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
-        samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
-
-        samtools view -@ ${task.cpus} -b -f 2 -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
-        samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
-        samtools index ${prefix}.unique.sort.bam
-        samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
-        rm ${prefix}.unique.bam
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            bwa: \$( bwa 2>&1 | grep -i version | awk '{print \$2}' )
-            samtools: \$( samtools --version | head -n 1 | awk '{print \$2}' )
-        END_VERSIONS
-        """
-    }
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        bwa: \$( bwa 2>&1 | grep -i version | awk '{print \$2}' )
+        samtools: \$( samtools --version | head -n 1 | awk '{print \$2}' )
+    END_VERSIONS
+    """
 }
