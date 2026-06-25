@@ -13,11 +13,11 @@ process BWA_SE {
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
     def ref_base = reference.baseName
-    def bwa_index = [ "${projectDir}/assets/resources/${ref_base}.amb", 
-                      "${projectDir}/assets/resources/${ref_base}.ann", 
-                      "${projectDir}/assets/resources/${ref_base}.bwt", 
-                      "${projectDir}/assets/resources/${ref_base}.pac", 
-                      "${projectDir}/assets/resources/${ref_base}.sa"   ]
+    def bwa_index = [ "${projectDir}/assets/resources/bwa_index/${ref_base}.amb", 
+                      "${projectDir}/assets/resources/bwa_index/${ref_base}.ann", 
+                      "${projectDir}/assets/resources/bwa_index/${ref_base}.bwt", 
+                      "${projectDir}/assets/resources/bwa_index/${ref_base}.pac", 
+                      "${projectDir}/assets/resources/bwa_index/${ref_base}.sa"   ]
 
     def has_index = bwa_index.every { file(it).exists() }
 
@@ -28,7 +28,7 @@ process BWA_SE {
                 -O ${params.bwa_gap_open} \
                 -E ${params.bwa_gap_ext} \
                 -L ${params.bwa_clip} \
-                ${reference} ${read} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+                ${ref_base} ${read} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
         samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
         samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
@@ -52,7 +52,7 @@ process BWA_SE {
                 -O ${params.bwa_gap_open} \
                 -E ${params.bwa_gap_ext} \
                 -L ${params.bwa_clip} \
-                ${reference} ${read} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+                ${ref_base} ${read} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
         samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
         samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
@@ -100,7 +100,7 @@ process BWA_PE {
                 -O ${params.bwa_gap_open} \
                 -E ${params.bwa_gap_ext} \
                 -L ${params.bwa_clip} \
-                ${reference} ${read1} ${read2} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+                ${ref_base} ${read1} ${read2} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
         samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
         samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
@@ -124,7 +124,7 @@ process BWA_PE {
                 -O ${params.bwa_gap_open} \
                 -E ${params.bwa_gap_ext} \
                 -L ${params.bwa_clip} \
-                ${reference} ${read1} ${read2} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+                ${ref_base} ${read1} ${read2} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
         samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
         samtools view -@ ${task.cpus} -b -f 2 -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
