@@ -47,6 +47,7 @@ Usage:
         --fp_umi_delim                delimiter to use between the read name and the UMI, default: ":"
 
     Flash2:
+        --skip_flash2                 whether to skip flash2, default: false
         --f2_min_overlap              min overlap for flash2, default: 10
         --f2_max_overlap              max overlap for flash2, default: 150
         --f2_min_overlap_outie        min overlap outie for flash2, default: 20

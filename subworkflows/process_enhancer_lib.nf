@@ -32,7 +32,6 @@ workflow process_enhancer_lib {
         BWA_PE{ch_align}
         ch_bam = BWA_PE.out.ch_bam
         ch_flagstat = BWA_PE.out.ch_flagstat
-
     } else {
         FLASH2(ch_dedup_fastq)
         ch_extended_frags = FLASH2.out.ch_extended_frags
