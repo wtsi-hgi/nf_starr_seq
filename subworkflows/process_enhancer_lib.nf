@@ -84,7 +84,7 @@ workflow process_enhancer_lib {
 
     ch_starrpeaker_sets = ch_starrpeaker_sets.filter { 
         library, sample, replicate, output_bam, output_bai, input_bam, input_bai, reference ->
-        def files = [
+        def starrpeaker_files = [
             "${params.resource}/starrpeaker/${reference}.chromsize.tsv",
             "${params.resource}/starrpeaker/${reference}.blacklist.bed",
             "${params.resource}/starrpeaker/${reference}.ucsc-gc-5bp.bw",
@@ -92,7 +92,7 @@ workflow process_enhancer_lib {
             "${params.resource}/starrpeaker/${reference}.linearfold-folding-energy-100bp.bw"
         ]
 
-        def has_files = files.every { file(it).exists() }
+        def has_files = starrpeaker_files.every { file(it).exists() }
         if (!has_files) {
             log.warn "Skipping STARRPeaker for ${reference}: missing resource files"
         }

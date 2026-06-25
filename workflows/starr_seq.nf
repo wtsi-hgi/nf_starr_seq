@@ -109,6 +109,7 @@ params.help                    = false
 params.version                 = false
 params.pipeline_name           = workflow.manifest.name
 params.pipeline_version        = workflow.manifest.version
+params.sanger_module           = params.sanger_module           ?: false
 
 params.sample_sheet            = null
 params.outdir                  = params.outdir                  ?: "$PWD"

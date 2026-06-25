@@ -89,7 +89,7 @@ process CHECK_FILES {
 
     def valid_references = ['hg38']
     if (library == "enhancer") {
-        if (reference == '' or reference == null) {
+        if (reference == '' || reference == null) {
             error("Error: reference is required for library '${library}' but is empty.")
         }
         if (!valid_references.contains(reference)) {
@@ -104,7 +104,7 @@ process CHECK_FILES {
             "${params.resource}/bwa_index/${reference}.sa"
         ]
 
-        def has_files = files.every { file(it).exists() }
+        def has_files = bwa_files.every { file(it).exists() }
         if (!has_files) {
             error("Missing bwa index in the ${params.resource}/bwa_index for ${reference}")
         }
