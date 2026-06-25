@@ -13,11 +13,11 @@ process BWA_SE {
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
     def ref_base = reference.baseName
-    def bwa_index = [ "${projectDir}/assets/resources/bwa_index/${ref_base}.amb", 
-                      "${projectDir}/assets/resources/bwa_index/${ref_base}.ann", 
-                      "${projectDir}/assets/resources/bwa_index/${ref_base}.bwt", 
-                      "${projectDir}/assets/resources/bwa_index/${ref_base}.pac", 
-                      "${projectDir}/assets/resources/bwa_index/${ref_base}.sa"   ]
+    def bwa_index = [ "${params.resource}/bwa_index/${ref_base}.amb", 
+                      "${params.resource}/bwa_index/${ref_base}.ann", 
+                      "${params.resource}/bwa_index/${ref_base}.bwt", 
+                      "${params.resource}/bwa_index/${ref_base}.pac", 
+                      "${params.resource}/bwa_index/${ref_base}.sa"   ]
 
     def has_index = bwa_index.every { file(it).exists() }
 
@@ -85,11 +85,11 @@ process BWA_PE {
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
     def ref_base = reference.baseName
-    def bwa_index = [ "${projectDir}/assets/resources/${ref_base}.amb", 
-                      "${projectDir}/assets/resources/${ref_base}.ann", 
-                      "${projectDir}/assets/resources/${ref_base}.bwt", 
-                      "${projectDir}/assets/resources/${ref_base}.pac", 
-                      "${projectDir}/assets/resources/${ref_base}.sa"  ]
+    def bwa_index = [ "${params.resource}/bwa_index/${ref_base}.amb", 
+                      "${params.resource}/bwa_index/${ref_base}.ann", 
+                      "${params.resource}/bwa_index/${ref_base}.bwt", 
+                      "${params.resource}/bwa_index/${ref_base}.pac", 
+                      "${params.resource}/bwa_index/${ref_base}.sa"   ]
 
     def has_index = bwa_index.every { file(it).exists() }
 

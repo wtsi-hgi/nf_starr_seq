@@ -87,11 +87,11 @@ workflow process_enhancer_lib {
 
         def ref_base = reference.baseName
         def files = [
-            "${projectDir}/assets/resources/starrpeaker/${ref_base}.chromsize.tsv",
-            "${projectDir}/assets/resources/starrpeaker/${ref_base}.blacklist.bed",
-            "${projectDir}/assets/resources/starrpeaker/${ref_base}.ucsc-gc-5bp.bw",
-            "${projectDir}/assets/resources/starrpeaker/${ref_base}.gem-mappability-100mer.bw",
-            "${projectDir}/assets/resources/starrpeaker/${ref_base}.linearfold-folding-energy-100bp.bw"
+            "${params.resource}/starrpeaker/${ref_base}.chromsize.tsv",
+            "${params.resource}/starrpeaker/${ref_base}.blacklist.bed",
+            "${params.resource}/starrpeaker/${ref_base}.ucsc-gc-5bp.bw",
+            "${params.resource}/starrpeaker/${ref_base}.gem-mappability-100mer.bw",
+            "${params.resource}/starrpeaker/${ref_base}.linearfold-folding-energy-100bp.bw"
         ]
 
         def has_files = files.every { file(it).exists() }
