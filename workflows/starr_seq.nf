@@ -193,11 +193,11 @@ if (params.sample_sheet) {
     } else {
         def sheet_file = file(params.sample_sheet)
         log.info """
-        =====================================
-        sample sheet content:
-        -------------------------------------
-        ${sheet_file.text}
-        =====================================
+=====================================
+sample sheet content:
+-------------------------------------
+${sheet_file.text}
+=====================================
         """
     }
 } else {
