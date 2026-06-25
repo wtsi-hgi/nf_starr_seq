@@ -7,8 +7,12 @@ process BWA_SE {
     tuple val(library), val(type), val(sample), val(replicate), val(reference), path(read)
 
     output:
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.unique.sort.bam"), path("${prefix}.unique.sort.bam.bai"), emit: ch_bam
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.flagstat.txt"), path("${prefix}.unique.flagstat.txt"), emit: ch_flagstat
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.unique.sort.bam"), 
+          path("${library}_${type}_${sample}_${replicate}.unique.sort.bam.bai"), emit: ch_bam
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.flagstat.txt"), 
+          path("${library}_${type}_${sample}_${replicate}.unique.flagstat.txt"), emit: ch_flagstat
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
@@ -46,8 +50,12 @@ process BWA_PE {
     tuple val(library), val(type), val(sample), val(replicate), val(reference), path(read1), path(read2)
 
     output:
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.unique.sort.bam"), path("${prefix}.unique.sort.bam.bai"), emit: ch_bam
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.flagstat.txt"), path("${prefix}.unique.flagstat.txt"), emit: ch_flagstat
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.unique.sort.bam"), 
+          path("${library}_${type}_${sample}_${replicate}.unique.sort.bam.bai"), emit: ch_bam
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.flagstat.txt"), 
+          path("${library}_${type}_${sample}_${replicate}.unique.flagstat.txt"), emit: ch_flagstat
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"

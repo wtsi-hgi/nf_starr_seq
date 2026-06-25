@@ -9,7 +9,7 @@ process FASTQC {
     tuple val(library), val(type), val(sample), val(replicate), path(read1), path(read2)
 
     output:
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}"), emit: ch_fastqc_html
+    tuple val(library), val(type), val(sample), val(replicate), path("${library}_${type}_${sample}_${replicate}"), emit: ch_fastqc_html
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"

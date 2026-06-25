@@ -12,17 +12,19 @@ process FLASH2 {
         "${mem * task.attempt} GB"
     }
 
-    // publishDir "${params.outdir}/res_flash2", mode: 'copy'
-
     tag "${library}_${type}_${sample}_${replicate}"
 
     input:
     tuple val(library), val(sample), val(replicate), path(read1), path(read2)
-
+    
     output:
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.extendedFrags.fastq.gz"), emit: ch_extended_frags
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.notCombined_1.fastq.gz"), path("${prefix}.notCombined_2.fastq.gz"), emit: ch_not_combined
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.merge_stats.tsv"), emit: ch_merge_stats
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.extendedFrags.fastq.gz"), emit: ch_extended_frags
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.notCombined_1.fastq.gz"), 
+          path("${library}_${type}_${sample}_${replicate}.notCombined_2.fastq.gz"), emit: ch_not_combined
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.merge_stats.tsv"), emit: ch_merge_stats
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"

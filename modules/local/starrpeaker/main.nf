@@ -12,17 +12,17 @@ process STARRPEAKER_CALLPEAKS {
 
     tag "${library}_${sample}_${replicate}"
 
-    publishDir "${params.outdir}/enhancer_peaks/${prefix}/starrpeaker", mode: "copy", overwrite: true
+    publishDir "${params.outdir}/enhancer_peaks/${library}_${sample}_${replicate}/starrpeaker", mode: "copy", overwrite: true
 
     input:
     tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai), val(reference)
 
     output:
     tuple val(library), val(sample), val(replicate), 
-          path("${prefix}.input.bw"),
-          path("${prefix}.output.bw"),
-          path("${prefix}.peak.bed"), 
-          path("${prefix}.peak.final.bed"), emit: ch_starrpeaker_peaks
+          path("${library}_${sample}_${replicate}.input.bw"),
+          path("${library}_${sample}_${replicate}.output.bw"),
+          path("${library}_${sample}_${replicate}.peak.bed"), 
+          path("${library}_${sample}_${replicate}.peak.final.bed"), emit: ch_starrpeaker_peaks
 
     script:
     def prefix = "${library}_${sample}_${replicate}"

@@ -1,16 +1,17 @@
 process FASTP {
     label 'process_low'
 
-    // publishDir "${params.outdir}/res_fastp", mode: 'copy'
-
     tag "${library}_${type}_${sample}_${replicate}"
 
     input:
     tuple val(library), val(type), val(sample), val(replicate), path(read1), path(read2)
 
     output:
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.dedup.r1.fastq.gz"), path("${prefix}.dedup.r2.fastq.gz"), emit: ch_dedup_fastq
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.dedup_stats.tsv"), emit: ch_dedup_stats
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.dedup.r1.fastq.gz"), 
+          path("${library}_${type}_${sample}_${replicate}.dedup.r2.fastq.gz"), emit: ch_dedup_fastq
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.dedup_stats.tsv"), emit: ch_dedup_stats
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"

@@ -1,15 +1,15 @@
 process CUTADAPT {
     label 'process_low'
 
-    // publishDir "${params.outdir}/res_cutadapt", mode: 'copy'
-
     tag "${library}_${type}_${sample}_${replicate}"
 
     input:
     tuple val(library), val(type), val(sample), val(replicate), path(read1), path(read2)
 
     output:
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.cutadapt.r1.fastq.gz"), path("${prefix}.cutadapt.r2.fastq.gz"), emit: ch_cutadapt_fastq
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.cutadapt.r1.fastq.gz"), 
+          path("${library}_${type}_${sample}_${replicate}.cutadapt.r2.fastq.gz"), emit: ch_cutadapt_fastq
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"

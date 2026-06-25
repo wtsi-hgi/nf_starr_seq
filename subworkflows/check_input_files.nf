@@ -53,11 +53,15 @@ process CHECK_FILES {
     tuple val(library), val(type), val(sample), val(replicate), val(directory), val(read1), val(read2), val(reference), val(barcode)
 
     output:
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.r1.fastq.gz"), path("${prefix}.r2.fastq.gz"), emit: ch_fastq
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.r1.fastq.gz"), 
+          path("${library}_${type}_${sample}_${replicate}.r2.fastq.gz"), emit: ch_fastq
     tuple val(library), val(type), val(sample), val(replicate), val(reference), emit: ch_ref, optional: true
     tuple val(library), val(type), val(sample), val(replicate), path(barcode), emit: ch_barcode, optional: true
 
     script:
+    def prefix = "${library}_${type}_${sample}_${replicate}"
+
     def valid_libraries = ["enhancer", "promoter", "random"]
     if (!valid_libraries.contains(library)) {
         error("Error: library '${library}' is invalid. Expected one of: ${valid_libraries.join(', ')}")
@@ -120,8 +124,6 @@ process CHECK_FILES {
             error("Error: File format for ${barcode} is incorrect. Expected one of: ${valid_bar_ext.join(', ')}")
         }
     }
-
-    def prefix = "${library}_${type}_${sample}_${replicate}"
 
     """
     echo "Checking: ${prefix}"

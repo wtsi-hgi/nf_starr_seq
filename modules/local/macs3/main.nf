@@ -12,16 +12,16 @@ process MACS3_CALLPEAKS {
 
     tag "${library}_${sample}_${replicate}"
 
-    publishDir "${params.outdir}/enhancer_peaks/${prefix}/macs3", mode: "copy", overwrite: true
+    publishDir "${params.outdir}/enhancer_peaks/${library}_${sample}_${replicate}/macs3", mode: "copy", overwrite: true
 
     input:
     tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai)
 
     output:
     tuple val(library), val(sample), val(replicate), 
-          path("${prefix}_peaks.narrowPeak"), 
-          path("${prefix}_peaks.xls"), 
-          path("${prefix}_summits.bed"), emit: ch_macs3_peaks
+          path("${library}_${sample}_${replicate}_peaks.narrowPeak"), 
+          path("${library}_${sample}_${replicate}_peaks.xls"), 
+          path("${library}_${sample}_${replicate}_summits.bed"), emit: ch_macs3_peaks
 
     script:
     def prefix = "${library}_${sample}_${replicate}"

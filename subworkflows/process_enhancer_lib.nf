@@ -1,9 +1,9 @@
-include { FASTP }               from "$projectDir/modules/local/fastp/main"
-include { FLASH2 }              from "$projectDir/modules/local/flash2/main"
-include { BWA_SE; BWA_PE }      from "$projectDir/modules/local/bwa/main"
-include { PICARD_DEDUP }        from "$projectDir/modules/local/picard/main"
-include { MACS3_CALLPEAKS }     from "$projectDir/modules/local/macs3/main"
-include {STARRPEAKER_CALLPEAKS} from "$projectDir/modules/local/starrpeaker/main"
+include { FASTP }                 from "$projectDir/modules/local/fastp/main"
+include { FLASH2 }                from "$projectDir/modules/local/flash2/main"
+include { BWA_SE; BWA_PE }        from "$projectDir/modules/local/bwa/main"
+include { PICARD_DEDUP }          from "$projectDir/modules/local/picard/main"
+include { MACS3_CALLPEAKS }       from "$projectDir/modules/local/macs3/main"
+include { STARRPEAKER_CALLPEAKS } from "$projectDir/modules/local/starrpeaker/main"
 
 workflow process_enhancer_lib {
     take:

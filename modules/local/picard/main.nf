@@ -16,8 +16,11 @@ process PICARD_DEDUP {
     tuple val(library), val(type), val(sample), val(replicate), path(bam), path(bai)
 
     output:
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.picard_dedup.bam"), path("${prefix}.picard_dedup.bam.bai"), emit: ch_picard_bam
-    tuple val(library), val(type), val(sample), val(replicate), path("${prefix}.picard_dedup.flagstat.txt"), emit: ch_picard_flagstat
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.picard_dedup.bam"), 
+          path("${library}_${type}_${sample}_${replicate}.picard_dedup.bam.bai"), emit: ch_picard_bam
+    tuple val(library), val(type), val(sample), val(replicate), 
+          path("${library}_${type}_${sample}_${replicate}.picard_dedup.flagstat.txt"), emit: ch_picard_flagstat
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
