@@ -1,5 +1,14 @@
 process FASTP {
-    label 'process_low'
+    label 'process_low_dynamic_memory'
+
+    memory {
+        def file_size = read1.size()
+        def mem = file_size <= 4_000_000_000 ? 16 :
+                  file_size <= 8_000_000_000 ? 32 :
+                  file_size <= 16_000_000_000 ? 64 :
+                  file_size <= 32_000_000_000 ? 128 : 256
+        "${mem * task.attempt} GB"
+    }
 
     tag "${library}_${type}_${sample}_${replicate}"
 
