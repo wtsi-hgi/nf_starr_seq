@@ -3,10 +3,10 @@ process PICARD_DEDUP {
 
     memory {
         def file_size = bam.size()
-        def mem = file_size <= 4_000_000_000 ? 4 :
-                  file_size <= 8_000_000_000 ? 8 :
-                  file_size <= 16_000_000_000 ? 16 :
-                  file_size <= 32_000_000_000 ? 32 : 64
+        def mem = file_size <= 4_000_000_000 ? 16 :
+                  file_size <= 8_000_000_000 ? 32 :
+                  file_size <= 16_000_000_000 ? 64 :
+                  file_size <= 32_000_000_000 ? 128 : 256
         "${mem * task.attempt} GB"
     }
 
