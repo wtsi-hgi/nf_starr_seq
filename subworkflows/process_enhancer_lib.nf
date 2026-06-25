@@ -1,9 +1,9 @@
-include { FASTP }           from "$projectDir/modules/local/fastp/main"
-include { FLASH2 }          from "$projectDir/modules/local/flash2/main"
-include { BWA_SE;
-          BWA_PE }          from "$projectDir/modules/local/bwa/main"
-include { PICARD_DEDUP }    from "$projectDir/modules/local/picard/main"
-include { MACS3_CALLPEAKS } from "$projectDir/modules/local/macs3/main"
+include { FASTP }               from "$projectDir/modules/local/fastp/main"
+include { FLASH2 }              from "$projectDir/modules/local/flash2/main"
+include { BWA_SE; BWA_PE }      from "$projectDir/modules/local/bwa/main"
+include { PICARD_DEDUP }        from "$projectDir/modules/local/picard/main"
+include { MACS3_CALLPEAKS }     from "$projectDir/modules/local/macs3/main"
+include {STARRPEAKER_CALLPEAKS} from "$projectDir/modules/local/starrpeaker/main"
 
 workflow process_enhancer_lib {
     take:
@@ -70,18 +70,37 @@ workflow process_enhancer_lib {
                                                     tuple(library, sample, bam, bai) }
     ch_output_bam = ch_picard_bam_by_type.output.map { library, type, sample, replicate, bam, bai -> 
                                                     tuple(library, sample, replicate, bam, bai) }
-    ch_bam_sets = ch_output_bam.join(ch_input_bam, by: [0,1])
     
-    MACS3_CALLPEAKS(ch_bam_sets)
+    /* -- macs3 -- */
+    ch_macs3_sets = ch_output_bam.join(ch_input_bam, by: [0,1])
+    MACS3_CALLPEAKS(ch_macs3_sets)
     ch_macs3_peaks = MACS3_CALLPEAKS.out.ch_macs3_peaks
 
+    /* -- starrpeaker -- */
     ch_ref = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference ->
                                 tuple(library, reference) }
                         .unique()
-    ch_bam_sets = ch_bam_sets.join(ch_ref)
+    ch_starrpeaker_sets = ch_macs3_sets.join(ch_ref)
 
+    ch_starrpeaker_sets = ch_starrpeaker_sets.filter { 
+        library, sample, replicate, output_bam, output_bai, input_bam, input_bai, reference ->
+
+        def ref_base = reference.baseName
+        def files = [
+            "${projectDir}/assets/resources/starrpeaker/${ref_base}.chromsize.tsv",
+            "${projectDir}/assets/resources/starrpeaker/${ref_base}.blacklist.bed",
+            "${projectDir}/assets/resources/starrpeaker/${ref_base}.ucsc-gc-5bp.bw",
+            "${projectDir}/assets/resources/starrpeaker/${ref_base}.gem-mappability-100mer.bw",
+            "${projectDir}/assets/resources/starrpeaker/${ref_base}.linearfold-folding-energy-100bp.bw"
+        ]
+
+        def has_files = files.every { file(it).exists() }
+        if (!has_files) {
+            log.warn "Skipping STARRPeaker for ${ref_base}: missing resource files"
+        }
+
+        return has_files
+    }
     
+    STARRPEAKER_CALLPEAKS(ch_starrpeaker_sets)
 }
-
-
-
