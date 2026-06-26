@@ -27,12 +27,12 @@ process MACS3_CALLPEAKS {
     def prefix = "${library}_${sample}_${replicate}"
 
     """
-    macs callpeak -t ${output_bam} \
-                  -c ${input_bam} \
-                  -g ${params.macs3_g} \
-                  -q ${params.macs3_q} \
-                  -n ${prefix} \
-                  --nomodel \
-                  --extsize ${params.macs3_extsize}
+    macs3 callpeak -t ${output_bam} \
+                   -c ${input_bam} \
+                   -g ${params.macs3_g} \
+                   -q ${params.macs3_q} \
+                   -n ${prefix} \
+                   --nomodel \
+                   --extsize ${params.macs3_extsize}
     """
 }
