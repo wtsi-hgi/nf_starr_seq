@@ -3,10 +3,10 @@ process FASTP {
 
     memory {
         def file_size = read1.size()
-        def mem = file_size <= 4_000_000_000 ? 16 :
-                  file_size <= 8_000_000_000 ? 32 :
-                  file_size <= 16_000_000_000 ? 64 :
-                  file_size <= 32_000_000_000 ? 128 : 256
+        def mem = file_size <= 4_000_000_000 ? 32 :
+                  file_size <= 8_000_000_000 ? 64 :
+                  file_size <= 16_000_000_000 ? 128 :
+                  file_size <= 32_000_000_000 ? 256 : 512
         "${mem * task.attempt} GB"
     }
 
