@@ -14,6 +14,13 @@ process FLASH2 {
 
     tag "${library}_${type}_${sample}_${replicate}"
 
+    publishDir(
+        path: "${params.outdir}/flash2_stats",
+        mode: "copy",
+        pattern: "*.merge_stats.tsv",
+        overwrite: true
+    )
+
     input:
     tuple val(library), val(sample), val(replicate), path(read1), path(read2)
     

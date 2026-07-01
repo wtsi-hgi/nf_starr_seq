@@ -3,6 +3,13 @@ process BWA_SE {
 
     tag "${library}_${type}_${sample}_${replicate}"
 
+    publishDir(
+        path: "${params.outdir}/bwa_stats",
+        mode: "copy",
+        pattern: "*.flagstat.txt",
+        overwrite: true
+    )
+
     input:
     tuple val(library), val(type), val(sample), val(replicate), val(reference), path(read)
 
@@ -45,6 +52,13 @@ process BWA_PE {
     label 'process_medium'
 
     tag "${library}_${type}_${sample}_${replicate}"
+
+    publishDir(
+        path: "${params.outdir}/bwa_stats",
+        mode: "copy",
+        pattern: "*.flagstat.txt",
+        overwrite: true
+    )
 
     input:
     tuple val(library), val(type), val(sample), val(replicate), val(reference), path(read1), path(read2)

@@ -1,7 +1,7 @@
 process FASTQC {
     label 'process_low'
 
-    publishDir "${params.outdir}/res_fastqc", mode: 'copy'
+    publishDir "${params.outdir}/fastqc_reports", mode: 'copy'
 
     tag "${library}_${type}_${sample}_${replicate}"
 

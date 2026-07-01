@@ -12,6 +12,13 @@ process FASTP {
 
     tag "${library}_${type}_${sample}_${replicate}"
 
+    publishDir(
+        path: "${params.outdir}/fastp_stats",
+        mode: "copy",
+        pattern: "*.dedup_stats.tsv",
+        overwrite: true
+    )
+
     input:
     tuple val(library), val(type), val(sample), val(replicate), path(read1), path(read2)
 
