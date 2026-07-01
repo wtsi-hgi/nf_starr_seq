@@ -69,9 +69,9 @@ workflow process_enhancer_lib {
                                                     tuple(library, sample, bam, bai) }
     ch_output_bam = ch_picard_bam_by_type.output.map { library, type, sample, replicate, bam, bai -> 
                                                     tuple(library, sample, replicate, bam, bai) }
-    
+
     /* -- macs3 -- */
-    ch_macs3_sets = ch_output_bam.join(ch_input_bam, by: [0,1])
+    ch_macs3_sets = ch_output_bam.combine(ch_input_bam, by: [0,1])
     MACS3_CALLPEAKS(ch_macs3_sets)
     ch_macs3_peaks = MACS3_CALLPEAKS.out.ch_macs3_peaks
 
@@ -79,7 +79,7 @@ workflow process_enhancer_lib {
     ch_ref = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference ->
                                 tuple(library, reference) }
                         .unique()
-    ch_starrpeaker_sets = ch_macs3_sets.join(ch_ref)
+    ch_starrpeaker_sets = ch_macs3_sets.combine(ch_ref, by: [0])
 
     ch_starrpeaker_sets = ch_starrpeaker_sets.filter { 
         library, sample, replicate, output_bam, output_bai, input_bam, input_bai, reference ->
@@ -98,6 +98,6 @@ workflow process_enhancer_lib {
 
         return has_files
     }
-    
+
     STARRPEAKER_CALLPEAKS(ch_starrpeaker_sets)
 }
