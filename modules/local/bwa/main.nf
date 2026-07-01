@@ -4,7 +4,7 @@ process BWA_SE {
     tag "${library}_${type}_${sample}_${replicate}"
 
     publishDir(
-        path: "${params.outdir}/bwa_stats",
+        path: "${params.outdir}/enhancer_bwa_stats",
         mode: "copy",
         pattern: "*.flagstat.txt",
         overwrite: true
@@ -54,7 +54,7 @@ process BWA_PE {
     tag "${library}_${type}_${sample}_${replicate}"
 
     publishDir(
-        path: "${params.outdir}/bwa_stats",
+        path: "${params.outdir}/enhancer_bwa_stats",
         mode: "copy",
         pattern: "*.flagstat.txt",
         overwrite: true
