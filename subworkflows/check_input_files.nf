@@ -91,7 +91,7 @@ process CHECK_FILES {
         error("Error: ${read2} is not found in ${directory}.")
     }
 
-    def valid_references = ['hg38']
+    def valid_references = ['hg38', 'hs1']
     if (library == "enhancer") {
         if (reference == '' || reference == null) {
             error("Error: reference is required for library '${library}' but is empty.")
