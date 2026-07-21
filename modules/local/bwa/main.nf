@@ -23,7 +23,7 @@ process BWA_SE {
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
-    def bwa_index = "${params.resource}/bwa_index/${reference}"
+    def bwa_index = "${params.resource}/bwa/${reference}"
 
     """
     bwa mem -t ${task.cpus} \
@@ -73,7 +73,7 @@ process BWA_PE {
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
-    def bwa_index = "${params.resource}/bwa_index/${reference}"
+    def bwa_index = "${params.resource}/bwa/${reference}"
     
     """
     bwa mem -t ${task.cpus} \

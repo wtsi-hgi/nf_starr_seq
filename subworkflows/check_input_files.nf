@@ -101,11 +101,11 @@ process CHECK_FILES {
         }
     
         def bwa_files = [
-            "${params.resource}/bwa_index/${reference}.amb",
-            "${params.resource}/bwa_index/${reference}.ann",
-            "${params.resource}/bwa_index/${reference}.bwt",
-            "${params.resource}/bwa_index/${reference}.pac",
-            "${params.resource}/bwa_index/${reference}.sa"
+            "${params.resource}/bwa/${reference}.amb",
+            "${params.resource}/bwa/${reference}.ann",
+            "${params.resource}/bwa/${reference}.bwt",
+            "${params.resource}/bwa/${reference}.pac",
+            "${params.resource}/bwa/${reference}.sa"
         ]
 
         def has_files = bwa_files.every { file(it).exists() }
