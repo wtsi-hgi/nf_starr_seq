@@ -1,7 +1,7 @@
 import re
 import numpy as np
 import subprocess
-# import Levenshtein
+import edlib
 
 def pigz_open(path: str):
     """
@@ -62,25 +62,6 @@ def fastq_iter_pe(handle1, handle2):
         yield ((header1.rstrip("\n"), seq1.rstrip("\n"), qual1.rstrip("\n")), 
                (header2.rstrip("\n"), seq2.rstrip("\n"), qual2.rstrip("\n")))
 
-def read_first_fasta_seq(fasta_path):
-    """
-    Read the first record of the fasta file
-    Parameters:
-        -- fasta_path: the path of fasta file
-    Returns:
-        -- str: the first sequence of the fasta file
-    """
-    seq_lines = []
-    with open(fasta_path, "r") as f:
-        for line in f:
-            line = line.rstrip()
-            if line.startswith(">"):
-                if seq_lines:
-                    break
-                continue
-            seq_lines.append(line)
-    return "".join(seq_lines)
-
 def reverse_complement(seq: str) -> str:
     """
     Generate the reverse complement of a DNA sequence.
@@ -118,26 +99,27 @@ def match_hamming_numpy(seq: str, pattern: str, max_mismatches: int) -> int:
     matches = np.where(mismatches <= max_mismatches)[0]
     return int(matches[0]) if matches.size > 0 else -1
 
-# def match_levenshtein(seq: str, pattern: str, max_mismatches: int) -> int:
-#     """
-#     Find approximate match of pattern in seq by levenshtein distance allowing max_mismatches
-#     Parameters:
-#         -- seq: the sequence to search in
-#         -- pattern: the pattern to match
-#         -- max_mismatches: maximum number of mismatches allowed
-#     Returns:
-#         -- int: start index of the match or -1 if not found
-#     """
-#     k = len(pattern)
-#     n = len(seq)
-#     if k > n:
-#         return -1
+def match_levenshtein(seq: str, pattern: str, max_mismatches: int) -> int:
+    """
+    Find approximate match of pattern in seq by levenshtein distance allowing max_mismatches
+    Parameters:
+        -- seq: the sequence to search in
+        -- pattern: the pattern to match
+        -- max_mismatches: maximum number of mismatches allowed
+    Returns:
+        -- int: start index of the match or -1 if not found
+    """
+    k = len(pattern)
+    n = len(seq)
+    if k > n:
+        return -1
 
-#     for i in range(n - k + 1):
-#         window = seq[i:i+k]
-#         if Levenshtein.distance(window, pattern) <= max_mismatches:
-#             return i
-#     return -1
+    for i in range(n - k + 1):
+        window = seq[i:i+k]
+        dist = edlib.align(window, pattern, mode = "NW", k = max_mismatches)["editDistance"]
+        if dist != -1:
+            return i
+    return -1
 
 def match_approximate(seq: str, pattern: str, max_mismatches: int, distance: str) -> int:
     """
@@ -151,8 +133,8 @@ def match_approximate(seq: str, pattern: str, max_mismatches: int, distance: str
     """
     if distance == "hamming":
         return match_hamming_numpy(seq, pattern, max_mismatches)
-    # elif distance == "levenshtein":
-    #     return match_levenshtein(seq, pattern, max_mismatches)
+    elif distance == "levenshtein":
+        return match_levenshtein(seq, pattern, max_mismatches)
     else:
         raise ValueError(f"Unknown distance metric: {distance}")
 
