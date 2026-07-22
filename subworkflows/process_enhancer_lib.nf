@@ -3,6 +3,8 @@ include { FLASH2 }                 from "$projectDir/modules/local/flash2/main"
 include { BOWTIE2_SE; BOWTIE2_PE } from "$projectDir/modules/local/bowtie2/main"
 include { BWA_SE; BWA_PE }         from "$projectDir/modules/local/bwa/main"
 include { PICARD_DEDUP }           from "$projectDir/modules/local/picard/main"
+include { BAMCOVERAGE }            from "$projectDir/modules/local/bamCoverage/main"
+include { BAMCOMPARE }             from "$projectDir/modules/local/bamCompare/main"
 include { MACS3_CALLPEAKS }        from "$projectDir/modules/local/macs3/main"
 include { STARRPEAKER_CALLPEAKS }  from "$projectDir/modules/local/starrpeaker/main"
 
@@ -68,9 +70,13 @@ workflow process_enhancer_lib {
         PICARD_DEDUP(ch_bam)
         ch_picard_bam = PICARD_DEDUP.out.ch_picard_bam
         ch_picard_flagstat = PICARD_DEDUP.out.ch_picard_flagstat
+        ch_picard_insert_size = PICARD_DEDUP.out.ch_picard_insert_size
     }
 
-    /* -- call peaks -- */
+    /* -- convert BAM to bigwig -- */
+    BAMCOVERAGE(ch_picard_bam)
+
+    /* -- split samples by input and output -- */
     ch_picard_bam
         .branch {
             input: it[1] == "input"
@@ -82,6 +88,10 @@ workflow process_enhancer_lib {
                                                     tuple(library, sample, bam, bai) }
     ch_output_bam = ch_picard_bam_by_type.output.map { library, type, sample, replicate, bam, bai -> 
                                                     tuple(library, sample, replicate, bam, bai) }
+
+    /* -- calculate bigwig log2 ratio -- */
+    ch_paired_sets = ch_output_bam.combine(ch_input_bam, by: [0,1])
+    BAMCOMPARE(ch_paired_sets)
 
     /* -- macs3 -- */
     ch_macs3_sets = ch_output_bam.combine(ch_input_bam, by: [0,1])
