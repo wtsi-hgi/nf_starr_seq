@@ -34,14 +34,16 @@ workflow check_input_files {
         .flatMap { it }
 
     CHECK_FILES(ch_validated)
-    ch_fastq   = CHECK_FILES.out.ch_fastq
-    ch_ref     = CHECK_FILES.out.ch_ref
-    ch_barcode = CHECK_FILES.out.ch_barcode
+    ch_fastq     = CHECK_FILES.out.ch_fastq
+    ch_ref       = CHECK_FILES.out.ch_ref
+    ch_barcode   = CHECK_FILES.out.ch_barcode
+    ch_blacklist = CHECK_FILES.out.ch_blacklist
 
     emit:
     ch_fastq
     ch_ref
     ch_barcode
+    ch_blacklist
 }
 
 process CHECK_FILES {
@@ -50,7 +52,7 @@ process CHECK_FILES {
     tag "${library}_${type}_${sample}_${replicate}"
 
     input:
-    tuple val(library), val(type), val(sample), val(replicate), val(directory), val(read1), val(read2), val(reference), val(barcode)
+    tuple val(library), val(type), val(sample), val(replicate), val(directory), val(read1), val(read2), val(reference), val(barcode), val(blacklist)
 
     output:
     tuple val(library), val(type), val(sample), val(replicate), 
@@ -58,6 +60,7 @@ process CHECK_FILES {
           path("${library}_${type}_${sample}_${replicate}.r2.fastq.gz"), emit: ch_fastq
     tuple val(library), val(type), val(sample), val(replicate), val(reference), emit: ch_ref, optional: true
     tuple val(library), val(type), val(sample), val(replicate), path(barcode), emit: ch_barcode, optional: true
+    tuple val(library), val(type), val(sample), val(replicate), path(blacklist), emit: ch_blacklist, optional: true
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"

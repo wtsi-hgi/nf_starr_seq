@@ -137,7 +137,7 @@ if (params.sample_sheet) {
                       .splitCsv(header: true, sep: sep)
     
     // check required columns
-    def required_cols = ['library', 'type', 'sample', 'replicate', 'directory', 'read1', 'read2', 'reference', 'barcode']
+    def required_cols = ['library', 'type', 'sample', 'replicate', 'directory', 'read1', 'read2', 'reference', 'barcode', 'blacklist']
     def header_line = new File(params.sample_sheet).readLines().head()
     def header = header_line.split(sep)
     def missing = required_cols.findAll { !(it in header) }
@@ -199,7 +199,7 @@ if (params.has_umi) {
 }
 
 /* -- check software exist -- */
-def required_tools = ['fastqc', 'cutadapt', 'fastp', 'flash2', 'bwa', 'samtools']
+def required_tools = ['fastqc', 'cutadapt', 'fastp', 'flash2', 'bwa', 'samtools', 'bowtie2', 'macs3', 'starrpeaker']
 check_required(required_tools)
 
 /* -- workflow -- */
@@ -209,9 +209,10 @@ workflow starr_seq {
 
     /* -- check input files exist -- */
     check_input_files(ch_input)
-    ch_fastq   = check_input_files.out.ch_fastq
-    ch_ref     = check_input_files.out.ch_ref
-    ch_barcode = check_input_files.out.ch_barcode
+    ch_fastq     = check_input_files.out.ch_fastq
+    ch_ref       = check_input_files.out.ch_ref
+    ch_barcode   = check_input_files.out.ch_barcode
+    ch_blacklist = check_input_files.out.ch_blacklist
 
     /* -- preprocess -- */
     preprocess(ch_fastq)
@@ -232,6 +233,7 @@ workflow starr_seq {
 
     /* -- process enhancer library -- */
     ch_enhancer = ch_enhancer.join(ch_ref, by: [0,1,2,3])
+                             .join(ch_blacklist, by: [0,1,2,3])
     process_enhancer_lib(ch_enhancer)
 
     /* -- process promoter library -- */

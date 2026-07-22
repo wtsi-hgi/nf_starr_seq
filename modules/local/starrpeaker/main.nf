@@ -15,7 +15,7 @@ process STARRPEAKER_CALLPEAKS {
     publishDir "${params.outdir}/enhancer_peaks/${library}_${sample}_${replicate}/starrpeaker", mode: "copy", overwrite: true
 
     input:
-    tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai), val(reference)
+    tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai), path(blacklist), val(reference)
 
     output:
     tuple val(library), val(sample), val(replicate), 

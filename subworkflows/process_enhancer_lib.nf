@@ -13,7 +13,7 @@ workflow process_enhancer_lib {
     ch_enhancer
 
     main:
-    ch_fastq = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference ->
+    ch_fastq = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist ->
                                     tuple(library, type, sample, replicate, read1, read2) }
     
     /* -- remove duplicated reads -- */
@@ -28,7 +28,7 @@ workflow process_enhancer_lib {
 
     /* -- merge reads if needed and align reads -- */
     if (params.skip_flash2) {
-        ch_align = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference ->
+        ch_align = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist ->
                                     tuple(library, type, sample, replicate, reference) }
                               .join(ch_dedup_fastq, by: [0,1,2,3])
         
@@ -47,7 +47,7 @@ workflow process_enhancer_lib {
         ch_not_combined = FLASH2.out.ch_not_combined
         ch_merge_stats = FLASH2.out.ch_merge_stats
 
-        ch_align = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference ->
+        ch_align = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist ->
                                     tuple(library, type, sample, replicate, reference) }
                               .join(ch_extended_frags, by: [0,1,2,3])
 
@@ -94,12 +94,16 @@ workflow process_enhancer_lib {
     BAMCOMPARE(ch_paired_sets)
 
     /* -- macs3 -- */
+    ch_blacklist = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist ->
+                                    tuple(library, blacklist) }
+                              .unique()
     ch_macs3_sets = ch_output_bam.combine(ch_input_bam, by: [0,1])
+                                 .combine(ch_blacklist, by: [0])
     MACS3_CALLPEAKS(ch_macs3_sets)
     ch_macs3_peaks = MACS3_CALLPEAKS.out.ch_macs3_peaks
 
     /* -- starrpeaker -- */
-    ch_ref = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference ->
+    ch_ref = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist ->
                                 tuple(library, reference) }
                         .unique()
     ch_starrpeaker_sets = ch_macs3_sets.combine(ch_ref, by: [0])

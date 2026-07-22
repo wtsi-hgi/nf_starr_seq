@@ -15,7 +15,7 @@ process MACS3_CALLPEAKS {
     publishDir "${params.outdir}/enhancer_peaks/${library}_${sample}_${replicate}/macs3", mode: "copy", overwrite: true
 
     input:
-    tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai)
+    tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai), path(blacklist)
 
     output:
     tuple val(library), val(sample), val(replicate), 
