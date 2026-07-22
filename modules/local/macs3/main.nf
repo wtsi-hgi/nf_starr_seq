@@ -33,6 +33,7 @@ process MACS3_CALLPEAKS {
                    -q ${params.macs3_q} \
                    -n ${prefix} \
                    --nomodel \
-                   --extsize ${params.macs3_extsize}
+                   --extsize ${params.macs3_extsize} \
+                   --keep-dup all
     """
 }
