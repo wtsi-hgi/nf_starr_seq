@@ -53,6 +53,12 @@ Usage:
         --f2_min_overlap_outie        min overlap outie for flash2, default: 20
         --f2_max_mismatch_density     max mismatch density for flash2, default: 0.25
 
+    Aligner:
+        --aligner                     the aligner to use, default: bowtie2, options: [bwa, bowtie2]
+
+    Bowtie2:
+        --bt2_cut_len                 the length of cutting reads into segments for Bowtie2, default: 50
+
     BWA:
         --bwa_mismatch                mismatch penalty for BWA, default: 4
         --bwa_gap_open                gap open penalty for BWA, default: 10,10
@@ -104,59 +110,6 @@ def check_required(required_tools) {
     log.info "Done: all required tools are available. Proceeding with the pipeline."
     log.info "====================================="
 }
-
-/* -- initialising parameters -- */
-params.help                    = false
-params.version                 = false
-params.pipeline_name           = workflow.manifest.name
-params.pipeline_version        = workflow.manifest.version
-params.sanger_module           = params.sanger_module           ?: false
-
-params.sample_sheet            = null
-params.outdir                  = params.outdir                  ?: "$PWD"
-params.resource                = params.resource                ?: null
-
-params.ct_a                    = params.ct_a                    ?: null
-params.ct_g                    = params.ct_g                    ?: null
-params.ct_A                    = params.ct_A                    ?: null
-params.ct_G                    = params.ct_G                    ?: null
-params.ct_O                    = params.ct_O                    ?: 3
-params.ct_e                    = params.ct_e                    ?: 0.1
-params.ct_m                    = params.ct_m                    ?: 0
-params.ct_action               = params.ct_action               ?: "trim"
-
-params.skip_dedup              = false
-params.has_umi                 = false
-params.fp_q                    = params.fp_q                    ?: 20
-params.fp_u                    = params.fp_u                    ?: 30
-params.fp_dup_calc_accuracy    = params.fp_dup_calc_accuracy    ?: 6
-params.fp_umi_loc              = params.fp_umi_loc              ?: null
-params.fp_umi_len              = params.fp_umi_len              ?: 10
-params.fp_umi_prefix           = params.fp_umi_prefix           ?: null
-params.fp_umi_skip             = params.fp_umi_skip             ?: 0
-params.fp_umi_delim            = params.fp_umi_delim            ?: ":"
-
-params.skip_flash2             = false
-params.f2_min_overlap          = params.f2_min_overlap          ?: 10
-params.f2_max_overlap          = params.f2_max_overlap          ?: 150
-params.f2_min_overlap_outie    = params.f2_min_overlap_outie    ?: 20
-params.f2_max_mismatch_density = params.f2_max_mismatch_density ?: 0.25
-
-params.bwa_mismatch            = params.bwa_mismatch            ?: 4
-params.bwa_gap_open            = params.bwa_gap_open            ?: "10,10"
-params.bwa_gap_ext             = params.bwa_gap_ext             ?: "5,5"
-params.bwa_clip                = params.bwa_clip                ?: "1,1"
-
-params.macs3_g                 = params.macs3_g                 ?: "hs"
-params.macs3_q                 = params.macs3_q                 ?: 0.05
-params.macs3_extsize           = params.macs3_extsize           ?: 200
-
-params.sp_threshold            = params.sp_threshold            ?: 0.05
-params.sp_length               = params.sp_length               ?: 500
-params.sp_step                 = params.sp_step                 ?: 100
-params.sp_min                  = params.sp_min                  ?: 0
-params.sp_max                  = params.sp_max                  ?: 1000
-params.sp_mincov               = params.sp_mincov               ?: 0
 
 /* -- pipeline info -- */
 log.info """
