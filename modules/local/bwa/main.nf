@@ -15,8 +15,8 @@ process BWA_SE {
 
     output:
     tuple val(library), val(type), val(sample), val(replicate), 
-          path("${library}_${type}_${sample}_${replicate}.unique.sort.bam"), 
-          path("${library}_${type}_${sample}_${replicate}.unique.sort.bam.bai"), emit: ch_bam
+          path("${library}_${type}_${sample}_${replicate}.unique.bam"), 
+          path("${library}_${type}_${sample}_${replicate}.unique.bam.bai"), emit: ch_bam
     tuple val(library), val(type), val(sample), val(replicate), 
           path("${library}_${type}_${sample}_${replicate}.flagstat.txt"), 
           path("${library}_${type}_${sample}_${replicate}.unique.flagstat.txt"), emit: ch_flagstat
@@ -31,14 +31,14 @@ process BWA_SE {
             -O ${params.bwa_gap_open} \
             -E ${params.bwa_gap_ext} \
             -L ${params.bwa_clip} \
-            ${bwa_index} ${read} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+            ${bwa_index} ${read} \
+            | samtools sort -@ ${task.cpus} -o ${prefix}.bam -
+    samtools index ${prefix}.bam
     samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
-    samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
-    samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
-    samtools index ${prefix}.unique.sort.bam
-    samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
-    rm ${prefix}.unique.bam
+    samtools view -@ ${task.cpus} -b -F 4 -F 256 -F 2048 -q ${params.aligner_min_mapq} ${prefix}.bam > ${prefix}.unique.bam
+    samtools index ${prefix}.unique.bam
+    samtools flagstat ${prefix}.unique.bam > ${prefix}.unique.flagstat.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -65,8 +65,8 @@ process BWA_PE {
 
     output:
     tuple val(library), val(type), val(sample), val(replicate), 
-          path("${library}_${type}_${sample}_${replicate}.unique.sort.bam"), 
-          path("${library}_${type}_${sample}_${replicate}.unique.sort.bam.bai"), emit: ch_bam
+          path("${library}_${type}_${sample}_${replicate}.unique.bam"), 
+          path("${library}_${type}_${sample}_${replicate}.unique.bam.bai"), emit: ch_bam
     tuple val(library), val(type), val(sample), val(replicate), 
           path("${library}_${type}_${sample}_${replicate}.flagstat.txt"), 
           path("${library}_${type}_${sample}_${replicate}.unique.flagstat.txt"), emit: ch_flagstat
@@ -81,14 +81,14 @@ process BWA_PE {
             -O ${params.bwa_gap_open} \
             -E ${params.bwa_gap_ext} \
             -L ${params.bwa_clip} \
-            ${bwa_index} ${read1} ${read2} | samtools view -@ ${task.cpus} -bS - > ${prefix}.bam
+            ${bwa_index} ${read1} ${read2} \
+            | samtools sort -@ ${task.cpus} -o ${prefix}.bam -
+    samtools index ${prefix}.bam
     samtools flagstat ${prefix}.bam > ${prefix}.flagstat.txt
 
-    samtools view -@ ${task.cpus} -b -F 256 -F 2048 ${prefix}.bam > ${prefix}.unique.bam
-    samtools sort -@ ${task.cpus} -o ${prefix}.unique.sort.bam ${prefix}.unique.bam
-    samtools index ${prefix}.unique.sort.bam
-    samtools flagstat ${prefix}.unique.sort.bam > ${prefix}.unique.flagstat.txt
-    rm ${prefix}.unique.bam
+    samtools view -@ ${task.cpus} -b -f 2 -F 256 -F 2048 -q ${params.aligner_min_mapq} ${prefix}.bam > ${prefix}.unique.bam
+    samtools index ${prefix}.unique.bam
+    samtools flagstat ${prefix}.unique.bam > ${prefix}.unique.flagstat.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
