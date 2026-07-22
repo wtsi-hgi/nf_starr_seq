@@ -1,9 +1,10 @@
-include { FASTP }                 from "$projectDir/modules/local/fastp/main"
-include { FLASH2 }                from "$projectDir/modules/local/flash2/main"
-include { BWA_SE; BWA_PE }        from "$projectDir/modules/local/bwa/main"
-include { PICARD_DEDUP }          from "$projectDir/modules/local/picard/main"
-include { MACS3_CALLPEAKS }       from "$projectDir/modules/local/macs3/main"
-include { STARRPEAKER_CALLPEAKS } from "$projectDir/modules/local/starrpeaker/main"
+include { FASTP }                  from "$projectDir/modules/local/fastp/main"
+include { FLASH2 }                 from "$projectDir/modules/local/flash2/main"
+include { BOWTIE2_SE; BOWTIE2_PE } from "$projectDir/modules/local/bowtie2/main"
+include { BWA_SE; BWA_PE }         from "$projectDir/modules/local/bwa/main"
+include { PICARD_DEDUP }           from "$projectDir/modules/local/picard/main"
+include { MACS3_CALLPEAKS }        from "$projectDir/modules/local/macs3/main"
+include { STARRPEAKER_CALLPEAKS }  from "$projectDir/modules/local/starrpeaker/main"
 
 workflow process_enhancer_lib {
     take:
@@ -29,9 +30,15 @@ workflow process_enhancer_lib {
                                     tuple(library, type, sample, replicate, reference) }
                               .join(ch_dedup_fastq, by: [0,1,2,3])
         
-        BWA_PE{ch_align}
-        ch_bam = BWA_PE.out.ch_bam
-        ch_flagstat = BWA_PE.out.ch_flagstat
+        if (params.aligner == "bowtie2") {
+            BOWTIE2_PE{ch_align}
+            ch_bam = BOWTIE2_PE.out.ch_bam
+            ch_flagstat = BOWTIE2_PE.out.ch_flagstat
+        } else {
+            BWA_PE{ch_align}
+            ch_bam = BWA_PE.out.ch_bam
+            ch_flagstat = BWA_PE.out.ch_flagstat
+        }
     } else {
         FLASH2(ch_dedup_fastq)
         ch_extended_frags = FLASH2.out.ch_extended_frags
@@ -42,9 +49,15 @@ workflow process_enhancer_lib {
                                     tuple(library, type, sample, replicate, reference) }
                               .join(ch_extended_frags, by: [0,1,2,3])
 
-        BWA_SE{ch_align}
-        ch_bam = BWA_SE.out.ch_bam
-        ch_flagstat = BWA_SE.out.ch_flagstat
+        if (params.aligner == "bowtie2") {
+            BOWTIE2_SE(ch_align)
+            ch_bam = BOWTIE2_SE.out.ch_bam
+            ch_flagstat = BOWTIE2_SE.out.ch_flagstat
+        } else {
+            BWA_SE{ch_align}
+            ch_bam = BWA_SE.out.ch_bam
+            ch_flagstat = BWA_SE.out.ch_flagstat
+        }
     }
 
     /* -- remove deduplicated reads by alignments -- */
