@@ -15,11 +15,12 @@ process MACS3_CALLPEAKS {
     publishDir "${params.outdir}/enhancer_peaks/${library}_${sample}_${replicate}/macs3", mode: "copy", overwrite: true
 
     input:
-    tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai), path(blacklist)
+    tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai), path(blacklist), val(reference)
 
     output:
     tuple val(library), val(sample), val(replicate), 
           path("${library}_${sample}_${replicate}_peaks.narrowPeak"), 
+          path("${library}_${sample}_${replicate}_peaks.narrowPeak.filtered"),
           path("${library}_${sample}_${replicate}_peaks.xls"), 
           path("${library}_${sample}_${replicate}_summits.bed"), emit: ch_macs3_peaks
 
@@ -35,5 +36,10 @@ process MACS3_CALLPEAKS {
                    --nomodel \
                    --extsize ${params.macs3_extsize} \
                    --keep-dup all
+
+    bedtools intersect -v \
+                       -a ${prefix}_peaks.narrowPeak \
+                       -b "${blacklist}" \
+                       > ${prefix}_peaks.narrowPeak.filtered
     """
 }

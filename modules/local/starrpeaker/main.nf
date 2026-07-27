@@ -29,7 +29,6 @@ process STARRPEAKER_CALLPEAKS {
     def do_se = params.skip_flash2 ? "" : "--se"
 
     def chromsize = "${params.resource}/starrpeaker/${reference}.chromsize.tsv"
-    def blacklist = "${params.resource}/starrpeaker/${reference}.blacklist.bed"
     def gc_file   = "${params.resource}/starrpeaker/${reference}.ucsc-gc-5bp.bw"
     def map_file  = "${params.resource}/starrpeaker/${reference}.gem-mappability-100mer.bw"
     def fold_file = "${params.resource}/starrpeaker/${reference}.linearfold-folding-energy-100bp.bw"

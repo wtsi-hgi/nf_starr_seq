@@ -93,26 +93,41 @@ workflow process_enhancer_lib {
     ch_paired_sets = ch_output_bam.combine(ch_input_bam, by: [0,1])
     BAMCOMPARE(ch_paired_sets)
 
-    /* -- macs3 -- */
-    ch_blacklist = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist ->
+    /* -- callpeaks inputs -- */
+    ch_blacklist = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist -> 
                                     tuple(library, blacklist) }
                               .unique()
-    ch_macs3_sets = ch_output_bam.combine(ch_input_bam, by: [0,1])
-                                 .combine(ch_blacklist, by: [0])
-    MACS3_CALLPEAKS(ch_macs3_sets)
+    ch_ref = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist -> 
+                                tuple(library, reference) }
+                        .unique()  
+    ch_callpeak_inputs = ch_output_bam.combine(ch_input_bam, by: [0,1])
+                                      .combine(ch_blacklist, by: [0])
+                                      .combine(ch_ref, by: [0])
+
+    ch_callpeak_inputs = ch_callpeak_inputs
+        .filter {
+            library, sample, replicate, output_bam, output_bai, input_bam, input_bai, blacklist, reference ->
+            def user_file = file(blacklist)
+            def default_file = file("${params.resource}/starrpeaker/${reference}.blacklist.bed")
+            user_file.exists() || default_file.exists()
+        }
+        .map {
+            library, sample, replicate, output_bam, output_bai, input_bam, input_bai, blacklist, reference ->
+            def user_file = file(blacklist)
+            def default_file = file("${params.resource}/starrpeaker/${reference}.blacklist.bed")
+            def selected_file = user_file.exists() ? user_file : default_file
+            tuple(library, sample, replicate, output_bam, output_bai, input_bam, input_bai, selected_file, reference)
+        }
+
+    /* -- callpeaks macs3 -- */
+    MACS3_CALLPEAKS(ch_callpeak_inputs)
     ch_macs3_peaks = MACS3_CALLPEAKS.out.ch_macs3_peaks
 
     /* -- starrpeaker -- */
-    ch_ref = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist ->
-                                tuple(library, reference) }
-                        .unique()
-    ch_starrpeaker_sets = ch_macs3_sets.combine(ch_ref, by: [0])
-
-    ch_starrpeaker_sets = ch_starrpeaker_sets.filter { 
-        library, sample, replicate, output_bam, output_bai, input_bam, input_bai, reference ->
+    ch_callpeak_inputs = ch_callpeak_inputs.filter { 
+        library, sample, replicate, output_bam, output_bai, input_bam, input_bai, blacklist, reference ->
         def starrpeaker_files = [
             "${params.resource}/starrpeaker/${reference}.chromsize.tsv",
-            "${params.resource}/starrpeaker/${reference}.blacklist.bed",
             "${params.resource}/starrpeaker/${reference}.ucsc-gc-5bp.bw",
             "${params.resource}/starrpeaker/${reference}.gem-mappability-100mer.bw",
             "${params.resource}/starrpeaker/${reference}.linearfold-folding-energy-100bp.bw"
