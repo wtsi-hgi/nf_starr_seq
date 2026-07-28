@@ -70,7 +70,6 @@ workflow process_enhancer_lib {
         PICARD_DEDUP(ch_bam)
         ch_picard_bam = PICARD_DEDUP.out.ch_picard_bam
         ch_picard_flagstat = PICARD_DEDUP.out.ch_picard_flagstat
-        ch_picard_insert_size = PICARD_DEDUP.out.ch_picard_insert_size
     }
 
     /* -- convert BAM to bigwig -- */

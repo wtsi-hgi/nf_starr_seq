@@ -23,7 +23,7 @@ process BOWTIE2_SE {
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
-    def bowtie2_index = "${params.resource}/bowtie2_index/${reference}"
+    def bowtie2_index = "${params.resource}/bowtie2/${reference}"
 
     """
     cutadapt -l ${params.bt2_cut_len} \
@@ -83,7 +83,7 @@ process BOWTIE2_PE {
 
     script:
     def prefix = "${library}_${type}_${sample}_${replicate}"
-    def bowtie2_index = "${params.resource}/bowtie2_index/${reference}"
+    def bowtie2_index = "${params.resource}/bowtie2/${reference}"
     
     """
     cutadapt -l ${params.bt2_cut_len} \
