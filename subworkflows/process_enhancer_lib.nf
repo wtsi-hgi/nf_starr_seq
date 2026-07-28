@@ -141,5 +141,5 @@ workflow process_enhancer_lib {
         return has_files
     }
 
-    STARRPEAKER_CALLPEAKS(ch_starrpeaker_sets)
+    STARRPEAKER_CALLPEAKS(ch_callpeak_inputs)
 }
