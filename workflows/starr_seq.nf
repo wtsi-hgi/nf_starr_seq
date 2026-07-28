@@ -233,7 +233,7 @@ workflow starr_seq {
 
     /* -- process enhancer library -- */
     ch_enhancer = ch_enhancer.join(ch_ref, by: [0,1,2,3])
-                             .join(ch_blacklist, by: [0,1,2,3])
+                             .join(ch_blacklist, by: [0,1,2,3], remainder: true)
     process_enhancer_lib(ch_enhancer)
 
     /* -- process promoter library -- */

@@ -103,17 +103,33 @@ process CHECK_FILES {
             error("Error: reference '${reference}' is invalid. Expected one of: ${valid_references.join(', ')}")
         }
     
-        def bwa_files = [
-            "${params.resource}/bwa/${reference}.amb",
-            "${params.resource}/bwa/${reference}.ann",
-            "${params.resource}/bwa/${reference}.bwt",
-            "${params.resource}/bwa/${reference}.pac",
-            "${params.resource}/bwa/${reference}.sa"
-        ]
+        if (params.aligner == "bwa") {
+            def bwa_files = [
+                "${params.resource}/bwa/${reference}.amb",
+                "${params.resource}/bwa/${reference}.ann",
+                "${params.resource}/bwa/${reference}.bwt",
+                "${params.resource}/bwa/${reference}.pac",
+                "${params.resource}/bwa/${reference}.sa"
+            ]
 
-        def has_files = bwa_files.every { file(it).exists() }
-        if (!has_files) {
-            error("Missing bwa index in the ${params.resource}/bwa_index for ${reference}")
+            def has_files = bwa_files.every { file(it).exists() }
+            if (!has_files) {
+                error("Missing bwa index in the ${params.resource}/bwa for ${reference}")
+            }
+        } else {
+            def bowtie2_files = [
+                "${params.resource}/bowtie2/${reference}.1.bt2",
+                "${params.resource}/bowtie2/${reference}.2.bt2",
+                "${params.resource}/bowtie2/${reference}.3.bt2",
+                "${params.resource}/bowtie2/${reference}.4.bt2",
+                "${params.resource}/bowtie2/${reference}.rev.1.bt2",
+                "${params.resource}/bowtie2/${reference}.rev.2.bt2"
+            ]
+
+            def has_files = bowtie2_files.every { file(it).exists() }
+            if (!has_files) {
+                error("Missing bwa index in the ${params.resource}/bowtie2 for ${reference}")
+            }            
         }
     }
 

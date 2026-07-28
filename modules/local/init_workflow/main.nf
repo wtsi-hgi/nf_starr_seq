@@ -1,4 +1,6 @@
 process NOTE_CMD {
+    label 'process_single'
+    
     publishDir "${params.outdir}", mode: 'copy'
 
     input:
