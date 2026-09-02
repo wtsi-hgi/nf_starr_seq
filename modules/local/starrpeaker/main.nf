@@ -34,6 +34,8 @@ process STARRPEAKER_CALLPEAKS {
     def fold_file = "${params.resource}/starrpeaker/${reference}.linearfold-folding-energy-100bp.bw"
 
     """
+    set +e
+
     starrpeaker ${do_se} \
                 --prefix ${prefix} \
                 --chromsize ${chromsize} \
@@ -47,5 +49,26 @@ process STARRPEAKER_CALLPEAKS {
                 --min ${params.sp_min} \
                 --max ${params.sp_max} \
                 --mincov ${params.sp_mincov}
+
+    status=\$?
+
+    if [ \$status -ne 0 ]; then
+        echo "WARNING: starrpeaker failed"
+        echo "Sample: ${prefix}"
+        echo "Exit code: \$status"
+        echo "Creating empty output files"
+
+        touch ${prefix}.input.bw
+        touch ${prefix}.output.bw
+
+        echo "# WARNING: STARRpeaker failed. No peaks were generated." > ${prefix}.peak.bed
+        echo "# This may be caused by an empty or insufficient peak file." >> ${prefix}.peak.bed
+
+        cp ${prefix}.peak.bed ${prefix}.peak.final.bed
+    else
+        echo "starrpeaker completed successfully"
+    fi
+
+    exit 0
     """
 }
