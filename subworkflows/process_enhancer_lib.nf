@@ -106,15 +106,15 @@ workflow process_enhancer_lib {
     ch_callpeak_inputs = ch_callpeak_inputs
         .filter {
             library, sample, replicate, output_bam, output_bai, input_bam, input_bai, blacklist, reference ->
-            def user_file = file(blacklist)
+            def has_user_file = blacklist && blacklist.trim() && file(blacklist).exists()
             def default_file = file("${params.resource}/starrpeaker/${reference}.blacklist.bed")
-            user_file.exists() || default_file.exists()
+            has_user_file || default_file.exists()
         }
         .map {
             library, sample, replicate, output_bam, output_bai, input_bam, input_bai, blacklist, reference ->
-            def user_file = file(blacklist)
+            def has_user_file = blacklist && blacklist.trim() && file(blacklist).exists()
             def default_file = file("${params.resource}/starrpeaker/${reference}.blacklist.bed")
-            def selected_file = user_file.exists() ? user_file : default_file
+            def selected_file = has_user_file ? file(blacklist) : default_file
             tuple(library, sample, replicate, output_bam, output_bai, input_bam, input_bai, selected_file, reference)
         }
 
