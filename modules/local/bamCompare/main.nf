@@ -3,7 +3,7 @@ process BAMCOMPARE {
 
     tag "${library}_${sample}_${replicate}"
 
-    publishDir "${params.outdir}/enhancer_bigwig/${library}_${type}_${sample}_${replicate}", mode: "copy", overwrite: true
+    publishDir "${params.outdir}/enhancer_bigwig/${library}_output_${sample}_${replicate}", mode: "copy", overwrite: true
 
     input:
     tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai)
