@@ -3,7 +3,7 @@ process BAMCOVERAGE {
 
     tag "${library}_${type}_${sample}_${replicate}"
 
-    publishDir "${params.outdir}/enhancer_bigwig/${library}_${type}_${sample}_${replicate}", mode: "copy", overwrite: true
+    publishDir "${params.outdir}/bigwig", mode: "copy", overwrite: true
 
     input:
     tuple val(library), val(type), val(sample), val(replicate), path(bam), path(bai)

@@ -12,7 +12,7 @@ process STARRPEAKER_CALLPEAKS {
 
     tag "${library}_${sample}_${replicate}"
 
-    publishDir "${params.outdir}/enhancer_peaks/${library}_${sample}_${replicate}/starrpeaker", mode: "copy", overwrite: true
+    publishDir "${params.outdir}/peaks/${library}_${sample}_${replicate}/starrpeaker", mode: "copy", overwrite: true
 
     input:
     tuple val(library), val(sample), val(replicate), path(output_bam), path(output_bai), path(input_bam), path(input_bai), path(blacklist), val(reference)

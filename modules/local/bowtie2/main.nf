@@ -4,7 +4,7 @@ process BOWTIE2_SE {
     tag "${library}_${type}_${sample}_${replicate}"
 
     publishDir(
-        path: "${params.outdir}/enhancer_bowtie2_stats",
+        path: "${params.outdir}/bowtie2_stats",
         mode: "copy",
         pattern: "*.flagstat.txt",
         overwrite: true
@@ -64,7 +64,7 @@ process BOWTIE2_PE {
     tag "${library}_${type}_${sample}_${replicate}"
 
     publishDir(
-        path: "${params.outdir}/enhancer_bowtie2_stats",
+        path: "${params.outdir}/bowtie2_stats",
         mode: "copy",
         pattern: "*.flagstat.txt",
         overwrite: true
