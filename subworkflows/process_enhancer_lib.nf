@@ -16,17 +16,16 @@ workflow process_enhancer_lib {
     ch_fastq = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist ->
                                     tuple(library, type, sample, replicate, read1, read2) }
     
-    /* -- remove duplicated reads -- */
-    if (params.skip_dedup) {
-        ch_dedup_fastq = ch_fastq
-        ch_dedup_stats = Channel.empty()
-    } else {
-        FASTP(ch_fastq)
-        ch_dedup_fastq = FASTP.out.ch_dedup_fastq
-        ch_dedup_stats = FASTP.out.ch_dedup_stats
-    }
-
-    /* -- merge reads if needed and align reads -- */
+    // -------------------------------------------------
+    // remove duplicated reads
+    // -------------------------------------------------
+    FASTP(ch_fastq)
+    ch_dedup_fastq = FASTP.out.ch_dedup_fastq
+    ch_dedup_stats = FASTP.out.ch_dedup_stats
+    
+    // -------------------------------------------------
+    // merge reads if needed and align reads
+    // -------------------------------------------------
     if (params.skip_flash2) {
         ch_align = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist ->
                                     tuple(library, type, sample, replicate, reference) }
@@ -62,20 +61,37 @@ workflow process_enhancer_lib {
         }
     }
 
-    /* -- remove deduplicated reads by alignments -- */
-    if (params.skip_dedup) {
-        ch_picard_bam = ch_bam
-        ch_picard_flagstat = Channel.empty()
-    } else {
-        PICARD_DEDUP(ch_bam)
-        ch_picard_bam = PICARD_DEDUP.out.ch_picard_bam
-        ch_picard_flagstat = PICARD_DEDUP.out.ch_picard_flagstat
-    }
+    // -------------------------------------------------
+    // remove deduplicated reads by alignments
+    // -------------------------------------------------
+    PICARD_DEDUP(ch_bam)
+    ch_picard_bam = PICARD_DEDUP.out.ch_picard_bam
+    ch_picard_flagstat = PICARD_DEDUP.out.ch_picard_flagstat
 
-    /* -- convert BAM to bigwig -- */
+    // -------------------------------------------------
+    // generate basic stats and figures
+    // -------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // -------------------------------------------------
+    // convert BAM to bigwig
+    // -------------------------------------------------
     BAMCOVERAGE(ch_picard_bam)
 
-    /* -- split samples by input and output -- */
+    // -------------------------------------------------
+    // split samples by input and output
+    // -------------------------------------------------
     ch_picard_bam
         .branch {
             input: it[1] == "input"
@@ -88,11 +104,15 @@ workflow process_enhancer_lib {
     ch_output_bam = ch_picard_bam_by_type.output.map { library, type, sample, replicate, bam, bai -> 
                                                     tuple(library, sample, replicate, bam, bai) }
 
-    /* -- calculate bigwig log2 ratio -- */
+    // -------------------------------------------------
+    // calculate bigwig log2 ratio
+    // -------------------------------------------------
     ch_paired_sets = ch_output_bam.combine(ch_input_bam, by: [0,1])
     BAMCOMPARE(ch_paired_sets)
 
-    /* -- callpeaks inputs -- */
+    // -------------------------------------------------
+    // create callpeaks inputs
+    // -------------------------------------------------
     ch_blacklist = ch_enhancer.map { library, type, sample, replicate, read1, read2, reference, blacklist -> 
                                     tuple(library, blacklist) }
                               .unique()
@@ -118,11 +138,16 @@ workflow process_enhancer_lib {
             tuple(library, sample, replicate, output_bam, output_bai, input_bam, input_bai, selected_file, reference)
         }
 
-    /* -- callpeaks macs3 -- */
+
+    // -------------------------------------------------
+    // callpeaks macs3
+    // -------------------------------------------------
     MACS3_CALLPEAKS(ch_callpeak_inputs)
     ch_macs3_peaks = MACS3_CALLPEAKS.out.ch_macs3_peaks
 
-    /* -- starrpeaker -- */
+    // -------------------------------------------------
+    // callpeaks starrpeaker
+    // -------------------------------------------------
     ch_callpeak_inputs = ch_callpeak_inputs.filter { 
         library, sample, replicate, output_bam, output_bai, input_bam, input_bai, blacklist, reference ->
         def starrpeaker_files = [

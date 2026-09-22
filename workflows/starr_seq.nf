@@ -33,7 +33,6 @@ Usage:
         --ct_action                   What to do if a match was found, default: "trim" {trim, retain, mask, lowercase, none}
 
     Deduplication:
-        --skip_dedup                  whether to skip deduplication, default: false
         --has_umi                     whether the reads contain UMIs, default: false
     
     Fastp (only for deduplication):
