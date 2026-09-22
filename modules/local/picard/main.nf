@@ -12,12 +12,12 @@ process PICARD_DEDUP {
 
     tag "${library}_${type}_${sample}_${replicate}"
 
-    publishDir(
-        path: "${params.outdir}/picard_stats",
-        mode: "copy",
-        pattern: "*.picard_dedup.flagstat.txt",
-        overwrite: true
-    )
+    // publishDir(
+    //     path: "${params.outdir}/picard_stats",
+    //     mode: "copy",
+    //     pattern: "*.picard_dedup.flagstat.txt",
+    //     overwrite: true
+    // )
 
     input:
     tuple val(library), val(type), val(sample), val(replicate), path(bam), path(bai)

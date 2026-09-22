@@ -3,12 +3,12 @@ process BOWTIE2_SE {
 
     tag "${library}_${type}_${sample}_${replicate}"
 
-    publishDir(
-        path: "${params.outdir}/bowtie2_stats",
-        mode: "copy",
-        pattern: "*.flagstat.txt",
-        overwrite: true
-    )
+    // publishDir(
+    //     path: "${params.outdir}/bowtie2_stats",
+    //     mode: "copy",
+    //     pattern: "*.flagstat.txt",
+    //     overwrite: true
+    // )
 
     input:
     tuple val(library), val(type), val(sample), val(replicate), val(reference), path(read)
@@ -63,12 +63,12 @@ process BOWTIE2_PE {
 
     tag "${library}_${type}_${sample}_${replicate}"
 
-    publishDir(
-        path: "${params.outdir}/bowtie2_stats",
-        mode: "copy",
-        pattern: "*.flagstat.txt",
-        overwrite: true
-    )
+    // publishDir(
+    //     path: "${params.outdir}/bowtie2_stats",
+    //     mode: "copy",
+    //     pattern: "*.flagstat.txt",
+    //     overwrite: true
+    // )
 
     input:
     tuple val(library), val(type), val(sample), val(replicate), val(reference), path(read1), path(read2)
