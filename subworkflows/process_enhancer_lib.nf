@@ -3,6 +3,7 @@ include { FLASH2 }                 from "$projectDir/modules/local/flash2/main"
 include { BOWTIE2_SE; BOWTIE2_PE } from "$projectDir/modules/local/bowtie2/main"
 include { BWA_SE; BWA_PE }         from "$projectDir/modules/local/bwa/main"
 include { PICARD_DEDUP }           from "$projectDir/modules/local/picard/main"
+include { BASIC_STATS }            from "$projectDir/modules/local/basic_stats/main"
 include { BAMCOVERAGE }            from "$projectDir/modules/local/bamCoverage/main"
 include { BAMCOMPARE }             from "$projectDir/modules/local/bamCompare/main"
 include { MACS3_CALLPEAKS }        from "$projectDir/modules/local/macs3/main"
@@ -71,19 +72,11 @@ workflow process_enhancer_lib {
     // -------------------------------------------------
     // generate basic stats and figures
     // -------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
+    ch_basic_stats = ch_dedup_stats.join(ch_flagstat, by: [0,1,2,3])
+                                   .join(ch_picard_flagstat, by: [0,1,2,3])
+    BASIC_STATS(ch_basic_stats)
+    ch_basic_stats_outs = BASIC_STATS.out.ch_basic_stats_outs
+  
     // -------------------------------------------------
     // convert BAM to bigwig
     // -------------------------------------------------
@@ -166,4 +159,5 @@ workflow process_enhancer_lib {
     }
 
     STARRPEAKER_CALLPEAKS(ch_callpeak_inputs)
+    ch_starrpeaker_peaks = STARRPEAKER_CALLPEAKS.out.ch_starrpeaker_peaks
 }
