@@ -90,7 +90,7 @@ class ParseStats:
 # main execution
 #-------------------------------------------------------
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "Summerise all the stats", allow_abbrev = False)
+    parser = argparse.ArgumentParser(description = "Summerise all the stats")
     parser.add_argument("--sample_ids",    type = str, required = True,       help = "list of sample IDs")
     parser.add_argument("--rep_ids",       type = str, required = True,       help = "list of replicate IDs")
     parser.add_argument("--fastp_stats",   type = str, required = True,       help = "list of fastp stats files")

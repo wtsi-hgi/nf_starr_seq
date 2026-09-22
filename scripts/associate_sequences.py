@@ -188,7 +188,7 @@ def create_barcode_count_histogram(df_barcode_counts: pl.DataFrame, output_path:
 # main execution
 #-------------------------------------------------------
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "Extract target and barcode from paired-end FASTQ files.", allow_abbrev = False)
+    parser = argparse.ArgumentParser(description = "Extract target and barcode from paired-end FASTQ files.")
     parser.add_argument("--read1",             type = str, required = True,       help = "Read 1 FASTQ file")
     parser.add_argument("--read2",             type = str, required = True,       help = "Read 2 FASTQ file")
     parser.add_argument("--barcode_up",        type = str, default = None,        help = "Upstream flank sequence of barcode in read2")

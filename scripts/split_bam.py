@@ -52,7 +52,7 @@ def split_name_sorted_bam(bam: str, subset1: str, subset2: str, read_type: str,s
 # main execution
 #-------------------------------------------------------
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "Split a BAM file into two sub BAM files", allow_abbrev = False)
+    parser = argparse.ArgumentParser(description = "Split a BAM file into two sub BAM files")
     parser.add_argument("--bam",           type = str, required = True,       help = "Input BAM file")
     parser.add_argument("--read_type",     type = str, default = "pe",        help = "sequence read type (se or pe)", choices = ['se', 'pe'])
     parser.add_argument("--output_dir",    type = str, default = os.getcwd(), help = "output directory")

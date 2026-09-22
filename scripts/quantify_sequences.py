@@ -104,7 +104,7 @@ def process_se_reads_in_chunks(path_read):
 
 #-- main execution --#
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "Extract targets by flanking sequences from FASTQ files.", allow_abbrev = False)
+    parser = argparse.ArgumentParser(description = "Extract targets by flanking sequences from FASTQ files.")
     parser.add_argument("--type",             type = str, required = True,       help = "Type of reads [se, pe]",    choices = ["se", "pe"])
     parser.add_argument("--reads",            type = str, required = True,       help = "FASTQ file for SE reads or comma-separated FASTQ files for PE reads")
     parser.add_argument("--target_up",        type = str, required = True,       help = "Upstream flank sequence of target in the read")
