@@ -160,4 +160,7 @@ workflow process_enhancer_lib {
 
     STARRPEAKER_CALLPEAKS(ch_callpeak_inputs)
     ch_starrpeaker_peaks = STARRPEAKER_CALLPEAKS.out.ch_starrpeaker_peaks
+
+    emit:
+    ch_basic_stats_outs
 }
