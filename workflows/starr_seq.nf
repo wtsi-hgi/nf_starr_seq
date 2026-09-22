@@ -9,6 +9,7 @@ include { FLASH2 }                    from "$projectDir/modules/local/flash2/mai
 include { check_input_files }         from "$projectDir/subworkflows/check_input_files.nf"
 include { preprocess }                from "$projectDir/subworkflows/preprocess.nf"
 include { process_enhancer_lib }      from "$projectDir/subworkflows/process_enhancer_lib.nf"
+include { generate_enhancer_report }  from "$projectDir/subworkflows/generate_enhancer_report.nf"
 
 /* -- define functions -- */
 def helpMessage() {
@@ -234,7 +235,10 @@ workflow starr_seq {
     ch_enhancer = ch_enhancer.join(ch_ref, by: [0,1,2,3])
                              .join(ch_blacklist, by: [0,1,2,3], remainder: true)
     process_enhancer_lib(ch_enhancer)
+    ch_basic_stats_outs = process_enhancer_lib.out.ch_basic_stats_outs
 
+    generate_enhancer_report(ch_basic_stats_outs)
+    
     /* -- process promoter library -- */
 
 
