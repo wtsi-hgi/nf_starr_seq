@@ -236,8 +236,10 @@ workflow starr_seq {
                              .join(ch_blacklist, by: [0,1,2,3], remainder: true)
     process_enhancer_lib(ch_enhancer)
     ch_basic_stats_outs = process_enhancer_lib.out.ch_basic_stats_outs
+    ch_macs3_peaks_stats_outs = process_enhancer_lib.out.ch_macs3_peaks_stats_outs
 
-    generate_enhancer_report(ch_basic_stats_outs)
+    ch_report_input = ch_basic_stats_outs.join(ch_macs3_peaks_stats_outs)
+    generate_enhancer_report(ch_report_input)
     
     /* -- process promoter library -- */
 
