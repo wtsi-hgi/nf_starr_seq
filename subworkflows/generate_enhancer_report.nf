@@ -25,7 +25,7 @@ process GENERATE_ENHANCER_REPORT {
     )
 
     input:
-    tuple val(library), val(file_basic_stats), val(plot_basic_num), val(plot_basic_pct)  
+    tuple val(library), val(file_basic_stats), val(plot_basic_num), val(plot_basic_pct), val(file_peak_stats), val(plot_peak_cov)
 
     output:
     tuple val(library), path("${library}.starr_seq_report.html"), emit: ch_html_report
