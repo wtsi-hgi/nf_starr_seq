@@ -3,6 +3,8 @@ create_html_render <- function(pipeline_name,
                                lib_type,
                                file_basic_stats,
                                plots_basic_stats,
+                               file_peak_stats,
+                               plot_peak_cov,
                                out_render_context)
 {
     pipeline_info <- paste0(pipeline_name, " v", pipeline_version)
@@ -130,9 +132,11 @@ function filterMaxValue(rows, columnId, filterValue) {{
 
 **Homepage:** https://github.com/wtsi-hgi/nf_starr_seq
 
-**Library Type:** {lib_type}
-
 This pipeline is designed for STARR-seq data QC analysis
+
+---
+
+### **Library Type:** {lib_type}
 
 ---
 
@@ -170,13 +174,37 @@ reactable(df_pct,
 ```
 <br>
 
-```{{r, echo = FALSE, fig.show = "hold", fig.align = "center", out.height = "50%", out.width = "50%"}}
+```{{r, echo = FALSE, fig.show = "hold", fig.align = "center", out.height = "100%", out.width = "100%"}}
 knitr::include_graphics("{plots_basic_stats[1]}", rel_path = FALSE)
 ```
 <br>
 
-```{{r, echo = FALSE, fig.show = "hold", fig.align = "center", out.height = "50%", out.width = "50%"}}
+```{{r, echo = FALSE, fig.show = "hold", fig.align = "center", out.height = "100%", out.width = "100%"}}
 knitr::include_graphics("{plots_basic_stats[2]}", rel_path = FALSE)
+```
+<br>
+
+---
+
+## 3. Peak Stats
+This section summarises the detected peaks.
+
+```{{r, echo = FALSE}}
+df <- as.data.frame(read.table("{file_peak_stats}", header = TRUE, sep = "\t", check.names = FALSE))
+min_row <- ifelse(nrow(df) > 10, 10, nrow(df))
+reactable(df, 
+          highlight = TRUE, 
+          bordered = TRUE, 
+          striped = TRUE, 
+          compact = TRUE, 
+          wrap = TRUE,
+          minRows = min_row, 
+          defaultColDef = colDef(minWidth = 150, align = "left"))
+```
+<br>
+
+```{{r, echo = FALSE, fig.show = "hold", fig.align = "center", out.height = "100%", out.width = "100%"}}
+knitr::include_graphics("{plot_peak_cov}", rel_path = FALSE)
 ```
 <br>
 
