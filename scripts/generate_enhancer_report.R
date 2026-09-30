@@ -3,14 +3,16 @@ quiet_library <- function(pkg) { suppressMessages(suppressWarnings(library(pkg, 
 packages <- c("tidyverse", "data.table", "vroom", "htmltools", "reactable", "optparse", "sparkline", "glue", "gtools")
 invisible(lapply(packages, quiet_library))
 
-option_list <- list(make_option("--rscript_dir",          type = "character", help = "directory path of R scripts",                   default = NULL),
-                    make_option("--lib_type",             type = "character", help = "library type",                                  default = NULL),
-                    make_option("--basic_stats",          type = "character", help = "file of basic stats",                           default = NULL),
-                    make_option("--basic_plots",          type = "character", help = "figures of basic stats",                        default = NULL),
-                    make_option("--output_dir",           type = "character", help = "output directory",                              default = getwd()),
-                    make_option("--prefix",               type = "character", help = "output prefix",                                 default = "sample"),
-                    make_option("--pl_name",              type = "character", help = "pipeline name",                                 default = "nf_starr_seq"),
-                    make_option("--pl_version",           type = "character", help = "pipeline version",                              default = "dev"))
+option_list <- list(make_option("--rscript_dir", type = "character", help = "directory path of R scripts", default = NULL),
+                    make_option("--lib_type",    type = "character", help = "library type",                default = NULL),
+                    make_option("--basic_stats", type = "character", help = "file of basic stats",         default = NULL),
+                    make_option("--basic_plots", type = "character", help = "figures of basic stats",      default = NULL),
+                    make_option("--peak_stats",  type = "character", help = "file of peak stats",          default = NULL),
+                    make_option("--peak_plot",   type = "character", help = "figure of peak coverage",     default = NULL),
+                    make_option("--output_dir",  type = "character", help = "output directory",            default = getwd()),
+                    make_option("--prefix",      type = "character", help = "output prefix",               default = "sample"),
+                    make_option("--pl_name",     type = "character", help = "pipeline name",               default = "nf_starr_seq"),
+                    make_option("--pl_version",  type = "character", help = "pipeline version",            default = "dev"))
 
 opt_parser <- OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
@@ -27,6 +29,8 @@ source(file.path(opt$rscript_dir, "report_html.R"))
 # ==============================================================================
 file_basic_stats <- opt$basic_stats
 plots_basic_stats <- unlist(strsplit(opt$basic_plots, ","))
+file_peak_stats <- opt$peak_stats
+plot_peak_cov <- opt$peak_plot
 
 # ==============================================================================
 # Prepare output directory
@@ -53,6 +57,8 @@ create_html_render(opt$pl_name,
                    opt$lib_type,
                    file_basic_stats,
                    plots_basic_stats,
+                   file_peak_stats,
+                   plot_peak_cov,
                    file_render_context)
 
 rmarkdown::render(file_render_context, clean = TRUE, quiet = TRUE)
