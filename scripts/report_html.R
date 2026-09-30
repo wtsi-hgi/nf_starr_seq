@@ -23,7 +23,6 @@ output:
 knitr::opts_chunk$set(echo = TRUE, fig.align = "center")
 library(reactable)
 library(sparkline)
-library(UpSetR)
 ```
 
 ```{{js, echo = FALSE}}
@@ -131,9 +130,10 @@ function filterMaxValue(rows, columnId, filterValue) {{
 
 **Homepage:** https://github.com/wtsi-hgi/nf_starr_seq
 
+**Library Type:** {lib_type}
+
 This pipeline is designed for STARR-seq data QC analysis
 
-**Library Type:** {lib_type}
 ---
 
 ## 2. Read Processing
