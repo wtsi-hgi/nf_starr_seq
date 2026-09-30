@@ -74,6 +74,7 @@ workflow process_enhancer_lib {
     // -------------------------------------------------
     ch_basic_stats = ch_dedup_stats.join(ch_flagstat, by: [0,1,2,3])
                                    .join(ch_picard_flagstat, by: [0,1,2,3])
+                                   .groupTuple()
     BASIC_STATS(ch_basic_stats)
     ch_basic_stats_outs = BASIC_STATS.out.ch_basic_stats_outs
   
