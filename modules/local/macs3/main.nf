@@ -38,6 +38,7 @@ process MACS3_CALLPEAKS {
                    -q ${params.macs3_q} \
                    -n ${prefix} \
                    --nomodel \
+                   --call-summits \
                    --extsize ${params.macs3_extsize} \
                    --keep-dup all
 
