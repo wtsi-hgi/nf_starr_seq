@@ -10,7 +10,7 @@ process GENERATE_ENHANCER_REPORT {
     label 'process_single_dynamic_memory'
     
     memory {
-        def file_size_total = basic_stats.size()
+        def file_size_total = file_basic_stats.size()
         def mem = file_size_total <= 100_000_000 ? 4 :
                   file_size_total <= 1_000_000_000 ? 8 :
                   file_size_total <= 2_000_000_000 ? 16 :
