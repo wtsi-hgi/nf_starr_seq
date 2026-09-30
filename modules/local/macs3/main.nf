@@ -48,3 +48,41 @@ process MACS3_CALLPEAKS {
                        > ${prefix}_peaks.narrowPeak.filtered
     """
 }
+
+process MACS3_STATSPEAKS {
+    label 'process_single_dynamic_memory'
+
+    memory {
+        def file_size = peaks_cov.size()
+        def mem = file_size <= 10_000_000 ? 4 :
+                  file_size <= 100_000_000 ? 8 :
+                  file_size <= 1_000_000_000 ? 16 :
+                  file_size <= 2_000_000_000 ? 32 : 64
+        "${mem * task.attempt} GB"
+    }
+
+    tag "${library}_${sample}_${replicate}"   
+
+    input:
+    tuple val(library), val(sample), val(replicate), 
+          path(peaks), path(peaks_filtered), path(peaks_cov), path(summits)
+    
+    output:
+    tuple val(library), 
+          path("${library}.peak_stats.tsv"), 
+          path("${library}.peak_cov.boxplot.png"), emit: ch_macs3_peaks_stats_outs
+
+    script:
+    def list_sample_ids     = sample.join(',')
+    def list_rep_ids        = replicate.join(',')
+    def list_peaks_filtered = peaks_filtered.join(',')
+    def list_peaks_cov      = peaks_cov.join(',')
+
+    """
+    python ${projectDir}/scripts/parse_peak_stats.py --sample_ids     ${list_sample_ids} \
+                                                     --rep_ids        ${list_rep_ids} \
+                                                     --raw_peaks      ${list_peaks_cov} \
+                                                     --filtered_peaks ${list_peaks_filtered}
+                                                     --output_prefix  ${library}
+    """
+}
