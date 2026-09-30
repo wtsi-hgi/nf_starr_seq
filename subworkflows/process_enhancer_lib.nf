@@ -6,7 +6,8 @@ include { PICARD_DEDUP }           from "$projectDir/modules/local/picard/main"
 include { BASIC_STATS }            from "$projectDir/modules/local/basic_stats/main"
 include { BAMCOVERAGE }            from "$projectDir/modules/local/bamCoverage/main"
 include { BAMCOMPARE }             from "$projectDir/modules/local/bamCompare/main"
-include { MACS3_CALLPEAKS }        from "$projectDir/modules/local/macs3/main"
+include { MACS3_CALLPEAKS;
+          MACS3_STATSPEAKS }       from "$projectDir/modules/local/macs3/main"
 include { STARRPEAKER_CALLPEAKS }  from "$projectDir/modules/local/starrpeaker/main"
 
 workflow process_enhancer_lib {
@@ -162,6 +163,14 @@ workflow process_enhancer_lib {
     STARRPEAKER_CALLPEAKS(ch_callpeak_inputs)
     ch_starrpeaker_peaks = STARRPEAKER_CALLPEAKS.out.ch_starrpeaker_peaks
 
+    // -------------------------------------------------
+    // get macs3 peak stats
+    // -------------------------------------------------
+    ch_macs3_peaks_stats = ch_macs3_peaks.groupTuple()
+    MACS3_STATSPEAKS(ch_macs3_peaks_stats)
+    ch_macs3_peaks_stats_outs = MACS3_STATSPEAKS.out.ch_macs3_peaks_stats_outs
+
     emit:
     ch_basic_stats_outs
+    ch_macs3_peaks_stats_outs
 }
