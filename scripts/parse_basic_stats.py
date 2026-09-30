@@ -162,44 +162,50 @@ if __name__ == "__main__":
     df_stats = pd.DataFrame(rows, columns = columns)
     df_stats.to_csv(output_stats, sep = "\t", index = False)
     n_rows = len(df_stats)
-    figsize = (10, 1.5 * n_rows)
+    figsize = (20, 1.5 * n_rows)
 
     # -- plotting -- #
     df_stats_nums = df_stats[["Num_Raw_Reads", "Num_QCed_Reads", "Num_Align_Reads", "Num_Dedup_Reads"]]
     df_stats_nums.index = df_stats["Sample"] + "_" + df_stats["Replicate"]
 
     num_colors = ["tomato", "yellowgreen", "royalblue", "orange"]
-    ax = df_stats_nums.plot(
+    fig, ax = plt.subplots(figsize = figsize)
+    df_stats_nums.plot(
+        ax = ax,
         kind = "barh", 
-        figsize = figsize, 
         width = 0.5, 
         color = num_colors,
         fontsize = 14
     )
-    ax.set_xlabel(ax.get_xlabel(), fontsize = 16)
-    ax.set_ylabel(ax.get_ylabel(), fontsize = 16)
-    ax.tick_params(axis = "x", labelsize = 14)
-    ax.tick_params(axis = "y", labelsize = 14)
+    ax.set_xlabel("Number of Reads (log10)", fontsize = 24)
+    ax.set_ylabel("", fontsize = 24)
+    ax.tick_params(axis = "x", labelsize = 20)
+    ax.tick_params(axis = "y", labelsize = 20)
     ax.set_xscale("log", base = 10)
-    ax.legend(loc = "center left", bbox_to_anchor = (1.0, 0.5), ncol = 1, fontsize = 14)
-    plt.xlabel("Number of Reads (log10)")
-    plt.savefig(output_num_plot, dpi = 300, bbox_inches = "tight")
+    ax.legend(loc = "center left", bbox_to_anchor = (1.0, 0.5), ncol = 1, fontsize = 20)
+
+    fig.tight_layout()
+    fig.savefig(output_num_plot, dpi = 300, bbox_inches = "tight")
+    plt.close(fig)
 
     df_stats_pct = df_stats[["Pct_QCed_Reads", "Pct_Align_Reads", "Pct_Dedup_Reads"]]
     df_stats_pct.index = df_stats["Sample"] + "_" + df_stats["Replicate"]
 
     pct_colors = ["yellowgreen", "royalblue", "orange"]
-    ax = df_stats_pct.plot(
+    fig, ax = plt.subplots(figsize = figsize)
+    df_stats_pct.plot(
+        ax = ax,
         kind = "barh", 
-        figsize = figsize, 
         width = 0.5, 
         color = pct_colors,
         fontsize = 14
     )
-    ax.set_xlabel(ax.get_xlabel(), fontsize = 16)
-    ax.set_ylabel(ax.get_ylabel(), fontsize = 16)
-    ax.tick_params(axis = "x", labelsize = 14)
-    ax.tick_params(axis = "y", labelsize = 14)
-    ax.legend(loc = "center left", bbox_to_anchor = (1.0, 0.5), ncol = 1, fontsize = 14)
-    plt.xlabel("Percentage of Reads")
-    plt.savefig(output_pct_plot, dpi = 300, bbox_inches = "tight")
+    ax.set_xlabel("Percentage of Reads", fontsize = 24)
+    ax.set_ylabel("", fontsize = 24)
+    ax.tick_params(axis = "x", labelsize = 20)
+    ax.tick_params(axis = "y", labelsize = 20)
+    ax.legend(loc = "center left", bbox_to_anchor = (1.0, 0.5), ncol = 1, fontsize = 20)
+
+    fig.tight_layout()
+    fig.savefig(output_pct_plot, dpi = 300, bbox_inches = "tight")
+    plt.close(fig)
