@@ -161,23 +161,45 @@ if __name__ == "__main__":
 
     df_stats = pd.DataFrame(rows, columns = columns)
     df_stats.to_csv(output_stats, sep = "\t", index = False)
+    n_rows = len(df_stats)
+    figsize = (10, 1.5 * n_rows)
 
     # -- plotting -- #
     df_stats_nums = df_stats[["Num_Raw_Reads", "Num_QCed_Reads", "Num_Align_Reads", "Num_Dedup_Reads"]]
     df_stats_nums.index = df_stats["Sample"] + "_" + df_stats["Replicate"]
 
     num_colors = ["tomato", "yellowgreen", "royalblue", "orange"]
-    ax = df_stats_nums.plot(kind = "bar", figsize = (8, 6), width = 0.3, color = num_colors)
-    ax.set_yscale("log", base = 10)
-    ax.legend(loc="center left", bbox_to_anchor = (1.0, 0.5), ncol = 1)
-    plt.ylabel("Number of Reads (log10)")
+    ax = df_stats_nums.plot(
+        kind = "barh", 
+        figsize = figsize, 
+        width = 0.5, 
+        color = num_colors,
+        fontsize = 14
+    )
+    ax.set_xlabel(ax.get_xlabel(), fontsize = 16)
+    ax.set_ylabel(ax.get_ylabel(), fontsize = 16)
+    ax.tick_params(axis = "x", labelsize = 14)
+    ax.tick_params(axis = "y", labelsize = 14)
+    ax.set_xscale("log", base = 10)
+    ax.legend(loc = "center left", bbox_to_anchor = (1.0, 0.5), ncol = 1, fontsize = 14)
+    plt.xlabel("Number of Reads (log10)")
     plt.savefig(output_num_plot, dpi = 300, bbox_inches = "tight")
 
     df_stats_pct = df_stats[["Pct_QCed_Reads", "Pct_Align_Reads", "Pct_Dedup_Reads"]]
     df_stats_pct.index = df_stats["Sample"] + "_" + df_stats["Replicate"]
 
     pct_colors = ["yellowgreen", "royalblue", "orange"]
-    ax = df_stats_pct.plot(kind = "bar", figsize = (6, 6), width = 0.3, color = pct_colors)
-    ax.legend(loc="center left", bbox_to_anchor = (1.0, 0.5), ncol = 1)
-    plt.ylabel("Percentage of Reads")
+    ax = df_stats_pct.plot(
+        kind = "barh", 
+        figsize = figsize, 
+        width = 0.5, 
+        color = pct_colors,
+        fontsize = 14
+    )
+    ax.set_xlabel(ax.get_xlabel(), fontsize = 16)
+    ax.set_ylabel(ax.get_ylabel(), fontsize = 16)
+    ax.tick_params(axis = "x", labelsize = 14)
+    ax.tick_params(axis = "y", labelsize = 14)
+    ax.legend(loc = "center left", bbox_to_anchor = (1.0, 0.5), ncol = 1, fontsize = 14)
+    plt.xlabel("Percentage of Reads")
     plt.savefig(output_pct_plot, dpi = 300, bbox_inches = "tight")
