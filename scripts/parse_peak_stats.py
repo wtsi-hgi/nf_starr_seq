@@ -32,7 +32,7 @@ class ParseStats:
         self.filtered_peaks = filtered_peaks
 
     def parse_peaks(self):
-        df = pl.read_csv(self.raw_peaks, separator = "\t", has_header = True, comment_prefix = "#", columns = ["pileup"])
+        df = pl.read_csv(self.raw_peaks, separator = "\t", has_header = True, comment_prefix = "#", columns = ["pileup"], skip_rows = 20)
         num_raw_peaks   = df.height
         peak_mean_cov   = df["pileup"].mean()
         peak_median_cov = df["pileup"].median()
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     if os.path.exists(output_stats):
         os.remove(output_stats)
 
-    output_cov_plot = f"{args.output_prefix}..peak_cov.boxplot.png"
+    output_cov_plot = f"{args.output_prefix}.peak_cov.boxplot.png"
     if os.path.exists(output_cov_plot):
         os.remove(output_cov_plot)
 
@@ -117,17 +117,27 @@ if __name__ == "__main__":
     df_stats = pd.DataFrame(list_rows, columns = columns)
     df_stats.to_csv(output_stats, sep = "\t", index = False)    
     n_rows = len(df_stats)
-    figsize = (1.5 * n_rows, 10)
+    figsize = (20, 1 * n_rows)
 
     # -- plotting -- #
     fig, ax = plt.subplots(figsize = figsize)
 
     ax.boxplot(
         [ cov.to_numpy() for cov in dict_peak_covs.values() ],
-        tick_labels = list(dict_peak_covs.keys()),
-        vert=False
+        labels = list(dict_peak_covs.keys()),
+        vert = False,
+        patch_artist = True,
+        boxprops = dict(facecolor = "ivory"),
+        medianprops = dict(color="red", linewidth = 2),
+        flierprops = dict(
+            marker = "o",
+            markerfacecolor = "red",
+            markeredgecolor = "red",
+            markersize = 5,
+            alpha = 0.7
+        )
     )
-
+                  
     ax.tick_params(axis = "x", labelsize = 20)
     ax.tick_params(axis = "y", labelsize = 20)
     ax.set_xlabel("Peak Coverage", fontsize = 24)
