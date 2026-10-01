@@ -40,6 +40,8 @@ process GENERATE_ENHANCER_REPORT {
                                                      --lib_type    ${library} \
                                                      --basic_stats ${file_basic_stats} \
                                                      --basic_plots ${plot_basic_num},${plot_basic_pct} \
+                                                     --peak_stats  ${file_peak_stats} \
+                                                     --peak_plot   ${plot_peak_cov} \
                                                      --prefix      ${library} \
                                                      --pl_name     ${params.pipeline_name} \
                                                      --pl_version  ${params.pipeline_version}                                                     

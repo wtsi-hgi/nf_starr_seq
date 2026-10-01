@@ -34,8 +34,8 @@ class ParseStats:
     def parse_peaks(self):
         df = pl.read_csv(self.raw_peaks, separator = "\t", has_header = True, comment_prefix = "#", columns = ["pileup"], skip_rows = 20)
         num_raw_peaks   = df.height
-        peak_mean_cov   = df["pileup"].mean()
-        peak_median_cov = df["pileup"].median()
+        peak_mean_cov   = round(df["pileup"].mean(), 2)
+        peak_median_cov = round(df["pileup"].median(), 2)
         peak_covs       = df["pileup"]
 
         num_filtered_peaks = ( pl.scan_csv(self.filtered_peaks, separator = "\t", has_header = False)
