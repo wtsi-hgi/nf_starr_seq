@@ -82,7 +82,7 @@ process MACS3_STATSPEAKS {
     python ${projectDir}/scripts/parse_peak_stats.py --sample_ids     ${list_sample_ids} \
                                                      --rep_ids        ${list_rep_ids} \
                                                      --raw_peaks      ${list_peaks_cov} \
-                                                     --filtered_peaks ${list_peaks_filtered}
+                                                     --filtered_peaks ${list_peaks_filtered} \
                                                      --output_prefix  ${library}
     """
 }
