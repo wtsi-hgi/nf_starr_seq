@@ -136,7 +136,8 @@ def duckdb_merge(chunk_files: list, tmp_dir: str) -> pl.DataFrame:
     file_list = ", ".join(f"'{f}'" for f in chunk_files)
     final_path = os.path.join(tmp_dir, "final.parquet")
 
-    con.execute(f"""
+    con.execute(
+        f"""
         COPY (
             SELECT target_seq, barcode_seq, SUM(count) AS count
             FROM read_parquet([{file_list}])
@@ -144,7 +145,8 @@ def duckdb_merge(chunk_files: list, tmp_dir: str) -> pl.DataFrame:
             ORDER BY target_seq
         )
         TO '{final_path}' (FORMAT PARQUET)
-    """)
+        """
+    )
     con.close()
 
     return pl.read_parquet(final_path)
